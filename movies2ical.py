@@ -721,16 +721,17 @@ def main(argv):
     #url = get_current_schedule()
     for url in urls:
         print url
-        # get list of every <td> objects (playdates) from url
-        (playdates, eventyear) = extract_playdates(url)
-        # parse list of playdate objects
-        movielist = parse_playdates(playdates, eventyear)
-        # print info
-        debug(0, url )
-        debug(0, get_page_mod_time(url) )
-        write_ical(movielist, url)
-        #for movie in movielist:
-        #    print movie,"\n"
+        if url.endswith(".html"):
+            # get list of every <td> objects (playdates) from url
+            (playdates, eventyear) = extract_playdates(url)
+            # parse list of playdate objects
+            movielist = parse_playdates(playdates, eventyear)
+            # print info
+            debug(0, url )
+            debug(0, get_page_mod_time(url) )
+            write_ical(movielist, url)
+            #for movie in movielist:
+            #    print movie,"\n"
 
 if __name__ == "__main__":
     status = main(sys.argv[1:])
