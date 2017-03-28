@@ -225,7 +225,10 @@ def extract_playdates(url):
     return (sched_soup.find_all('td','playdate'), eventyear )
 
 def startend_dates(datestring, eventyear):
-    #startmatch = re.search(r'([a-zA-Z]+)\s*(\d+)\s*-', datestring)
+    # replace en-dash with dash
+    #datestring = re.sub('\xe2\x80\x93','-', datestring)
+    datestring = re.sub(u'\u2013','-', datestring)
+    debug(0, "datestring = %s"%datestring )
     startmatch = re.search(r'([a-zA-Z]+)\s*(\d+)', datestring)
     if startmatch is None:
         return (None, None)
@@ -557,6 +560,7 @@ def parse_playdates(playdates, eventyear):
     movielist = []
     for playdate in playdates:
         # TODO: experimental try surrounding parse_playdate
+        #       bad form!
         try:
             movielist.extend(parse_playdate(playdate, eventyear))
         except:
