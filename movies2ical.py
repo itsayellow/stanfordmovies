@@ -503,7 +503,7 @@ def parse_playdate(playdate, eventyear):
         if re.search(r'\d+:.+',movieinfo_text):
             movie_times = re.search(r'\d+:.+',movieinfo_text).group(0)
         else:
-            print "\nWARNING: had to skip to next paragraph for movie %s to find times.\n"%moviename
+            #print "\nWARNING: had to skip to next paragraph for movie %s to find times.\n"%moviename
             # possibly stupid person makes new paragraph between movie and
             # times, check here if we find no times in movie <p>
             # TODO: this may break things? skip a movie?
