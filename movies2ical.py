@@ -10,6 +10,10 @@
 # put each movie into ical
 # finish ical
 # upload ical to google?
+#   pip2 install beautifulsoup4
+#   pip2 install dateutils
+#   pip2 install icalendar
+#   pip2 install lxml
 
 # TODO: find all imdb urls and fetch them all with threads simultaneously
 
