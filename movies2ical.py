@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 
 # go to http://www.stanfordtheatre.org/
 # find the link to http://www.stanfordtheatre.org/calendars/* on that page
