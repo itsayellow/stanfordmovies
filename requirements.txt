@@ -1,0 +1,7 @@
+# requirements file for movies2ical
+beautifulsoup4
+icalendar
+html5lib
+imdbpy>=6.5
+pytz
+tzlocal
