@@ -814,13 +814,14 @@ def main(argv=None):
     IMDB_CACHE_DIR.mkdir(exist_ok=True)
     THEATER_CACHE_DIR.mkdir(exist_ok=True)
 
+    print("-"*78)
     if args.file:
         srcfiles = [Path(x) for x in args.srcfile]
     else:
         srcfiles = fetch_schedule_htmls()
 
     for srcfile in srcfiles:
-        print("-"*78)
+        print("-"*30)
         print(srcfile.name)
 
         ics_filename = ICAL_OUT_DIR / (srcfile.stem + '.ics')
@@ -842,6 +843,9 @@ def main(argv=None):
 
         # write ical
         gen_ical(play_dates, ical_filename=ics_filename)
+
+        # print "finished" at date/time message
+        print("Finished at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"))
 
     return 0
 
