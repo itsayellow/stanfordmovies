@@ -224,11 +224,12 @@ def parse_td(td, calendar_year, verbose=False):
                                 movie_time = sib_text.strip()
                                 break
 
-                # clean up movie times
-                movie_times = process_movie_time_str(movie_time)
+                if movie_time is not None:
+                    # clean up movie times
+                    movie_times = process_movie_time_str(movie_time)
 
-                # append to movies for this date
-                movies.append((movie_name, imdb_link, movie_times))
+                    # append to movies for this date
+                    movies.append((movie_name, imdb_link, movie_times))
 
     if td_startdate is not None:
         movie_return = []
