@@ -1,6 +1,6 @@
 movies2ical
 ===========
-Utility to read current HTML calendar from stanfordtheatre.com and output ical file.
+Utility to read current HTML calendar from stanfordtheatre.org and output ical file.
 
 Periodically running in the background on macOS
 -----------------------------------------------
