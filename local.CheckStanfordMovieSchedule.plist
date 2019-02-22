@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>Label</key>
+        <string>local.CheckStanfordMovieSchedule</string>
+        <key>ProgramArguments</key>
+        <array>
+            <string>/usr/local/bin/python3</string>
+            <string>/INSERT/FULL/PATH/TO/movies2ical.py</string>
+            <string>-c</string>
+        </array>
+        <key>WorkingDirectory</key>
+        <string>/INSERT/FULL/PATH/TO/Stanford Theatre Calendars/</string>
+        <key>StandardOutPath</key>
+        <string>/INSERT/FULL/PATH/TO/stanford_out.txt</string>
+        <key>StandardErrorPath</key>
+        <string>/INSERT/FULL/PATH/TO/stanford_err.txt</string>
+        <key>StartCalendarInterval</key>
+        <array>
+            <dict>
+                <key>Hour</key>
+                <integer>3</integer>
+                <key>Minute</key>
+                <integer>0</integer>
+                <key>Weekday</key>
+                <integer>0</integer>
+            </dict>
+            <dict>
+                <key>Hour</key>
+                <integer>3</integer>
+                <key>Minute</key>
+                <integer>0</integer>
+                <key>Weekday</key>
+                <integer>2</integer>
+            </dict>
+            <dict>
+                <key>Hour</key>
+                <integer>3</integer>
+                <key>Minute</key>
+                <integer>0</integer>
+                <key>Weekday</key>
+                <integer>4</integer>
+            </dict>
+        </array>
+    </dict>
+</plist>
