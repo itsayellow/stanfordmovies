@@ -384,7 +384,7 @@ def parse_td(td, calendar_year, verbose=False):
             (movie_name, imdb_link, movie_times) = movie
             movie_return.append(
                     {
-                        'name':movie_name,
+                        'name':movie_name.strip(),
                         'imdb_url':imdb_link,
                         'show_startdate':td_startdate,
                         'show_enddate':td_enddate,
