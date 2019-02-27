@@ -203,22 +203,6 @@ def extract_movies_imdb(td):
     return movies
 
 
-def strip_nonlink_tags(td):
-    tag_types = {}
-
-    # find all types of tags present in td
-    for tag in td.find_all(True):
-        tag_types[tag.name] = True
-
-    # remove link tag "a" from link_types
-    tag_types.pop("a", None)
-
-    # no unwrap every tag still in tag_types
-    for tag_type in tag_types.keys():
-        for tag in td.find_all(tag_type):
-            tag.unwrap()
-
-
 def parse_td_new(td_in, calendar_year, verbose=False):
     # init
     movies = []
