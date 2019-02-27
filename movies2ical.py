@@ -3,6 +3,7 @@
 import re
 import sys
 import argparse
+import copy
 import datetime
 import json
 from pathlib import Path
@@ -85,31 +86,209 @@ def process_command_line(argv):
 
 
 def process_movie_time_str(movie_time):
-    #print(movie_time)
+    # Check for a string in parentheses.
+    #   Can be extra time typically for sat and/or sun
+    #   Can be random jibberish
+    # NOTE: currently this only looks for one parenthetical string
     time_extra = None
-    extra_time_re = re.search(r"\(([^)]*)\)", movie_time)
-    if extra_time_re:
-        time_extra_full = extra_time_re.group(1)
-        time_extra = re.search(r"(\d+:\d\d)", time_extra_full).group(1)
-        if re.search(r"sat", time_extra_full, re.I):
-            time_extra += " sat"
-        if re.search(r"sun", time_extra_full, re.I):
-            time_extra += " sun"
-        # remove extra time string in parens
-        movie_time = re.sub(r"\([^)]*\)", "", movie_time).strip()
+    paren_re = re.search(r"\(([^)]*)\)", movie_time)
+    if paren_re:
+        paren_full = paren_re.group(1)
+        time_extra_re = re.search(r"(\d+:\d\d)", paren_full)
+        if time_extra_re:
+            time_extra = time_extra_re.group(1)
+            if re.search(r"sat", paren_full, re.I):
+                time_extra += " sat"
+            if re.search(r"sun", paren_full, re.I):
+                time_extra += " sun"
+        else:
+            print("Warning: extra movie time "+paren_full+" is unparseable.")
+        # remove extra string in parens
+        movie_time = re.sub(re.escape(paren_re.group(0)), "", movie_time).strip()
 
     # change all non-digit, non-: to single space character
     movie_time = re.sub(r"[^0-9:]+", " ", movie_time).strip()
     # convert times to list
     movie_times = movie_time.split(" ")
+    # remove all non-time entries
+    movie_times = [x for x in movie_times if re.search(r"\d:\d\d", x)]
 
     if time_extra:
         movie_times.append(time_extra)
 
-    #print(movie_times)
-    #print("")
-
     return movie_times
+
+
+def parse_datestr(content_str, calendar_year):
+    """
+    Args:
+        content_str (str): String from html calendar with human-readable date
+            usually with month and date
+        calendar_year (int): full 4-digit year of calendar
+
+    Returns:
+        tuple: (td_startdate, td_enddate)
+            where td_*date is tuple: (year_int, month_int, date_int)
+    """
+    td_startdate = None
+    td_enddate = None
+    month_start_num = None
+
+    # movie dates (possibly)
+    # Searching for one of:
+    #   July 18-19
+    #   August 31-September 1
+    #   December 24
+    month_regexp = "(" + "|".join(MONTHS) + ")"
+    onemonth_multdate_re = re.search(
+            month_regexp + r"\s+(\d+)\s*-\s*(\d+)($|\D)",
+            content_str
+            )
+    multmonth_multdate_re = re.search(
+            month_regexp + r"\s+(\d+)\s*-\s*" + month_regexp + r"\s*(\d+)($|\D)",
+            content_str
+            )
+    # note: will also match last date in multmonth_multdate_re
+    onemonth_onedate_re = re.search(
+            month_regexp + r"\s+(\d+)\s*($|[^-])",
+            content_str
+            )
+    if onemonth_multdate_re:
+        month_start_num = MONTHS.index(onemonth_multdate_re.group(1)) + 1
+        date_start_num = int(onemonth_multdate_re.group(2))
+        month_end_num = month_start_num
+        date_end_num = int(onemonth_multdate_re.group(3))
+    elif multmonth_multdate_re:
+        month_start_num = MONTHS.index(multmonth_multdate_re.group(1)) + 1
+        date_start_num = int(multmonth_multdate_re.group(2))
+        month_end_num = MONTHS.index(multmonth_multdate_re.group(3)) + 1
+        date_end_num = int(multmonth_multdate_re.group(4))
+    elif onemonth_onedate_re:
+        month_start_num = MONTHS.index(onemonth_onedate_re.group(1)) + 1
+        date_start_num = int(onemonth_onedate_re.group(2))
+        month_end_num = month_start_num
+        date_end_num = date_start_num
+
+    if month_start_num is not None:
+        td_startdate = (calendar_year, month_start_num, date_start_num)
+        td_enddate = (calendar_year, month_end_num, date_end_num)
+
+    return(td_startdate, td_enddate)
+
+
+def extract_playdate(td, calendar_year):
+    # The easy way, if we find structured html <p class="date">
+    p_date = td.find("p", class_="date")
+
+    # if we find <p class="date"> and contents of tag has non-space char
+    if p_date and re.search(r"\S", "".join(p_date.contents)):
+        (td_startdate, td_enddate) = parse_datestr(p_date.contents[0], calendar_year)
+    else:
+        print("Warning: could not find date in:", file=sys.stderr)
+        print(str(td)[:78], file=sys.stderr)
+        (td_startdate, td_enddate) = (None, None)
+
+    return (td_startdate, td_enddate)
+
+
+def extract_movies_imdb(td):
+    movies = []
+
+    for link in td.find_all("a"):
+        if re.search(r"https?://[^/]*imdb\.", link['href']):
+            movie_text = "".join([str(x) for x in link.contents])
+            movies.append([str(link), link['href'], movie_text])
+
+    return movies
+
+
+def strip_nonlink_tags(td):
+    tag_types = {}
+
+    # find all types of tags present in td
+    for tag in td.find_all(True):
+        tag_types[tag.name] = True
+
+    # remove link tag "a" from link_types
+    tag_types.pop("a", None)
+
+    # no unwrap every tag still in tag_types
+    for tag_type in tag_types.keys():
+        for tag in td.find_all(tag_type):
+            tag.unwrap()
+
+
+def parse_td_new(td_in, calendar_year, verbose=False):
+    # init
+    movies = []
+
+    # lets not destroy original tree - make a copy of td before we modify it
+    td = copy.copy(td_in)
+
+    # extract all links to imdb movies and text they wrap
+    movie_list = extract_movies_imdb(td)
+    # if this td has no imdb link contained in it, presume not a movie playdate
+    #   and return immediately
+    if not movie_list:
+        return None
+
+    # extract month, date for this playdate
+    (td_startdate, td_enddate) = extract_playdate(td, calendar_year)
+
+    # remove all tags except <a> (e.g. remove <p>, <i>, <b>, ...)
+    strip_nonlink_tags(td)
+
+    # split text inside td on full movie link texts, yielding a list of strings
+    #   in-between movie names/links.  These will contain times.
+    movie_regexs = [re.escape(x[0]) for x in movie_list]
+    td_splits = re.split(
+            r"(?:" + "|".join(movie_regexs) + r")",
+            "".join([str(x) for x in td.contents])
+            )
+    # replace many space-like characters in a row with one space for all strings
+    td_splits = [re.sub(r"\s+", " ", x) for x in td_splits]
+
+    # len(td_splits) = len(movie_list) + 1
+    # td_splits consists of a list of all text preceding/following movie link 
+    #   strings
+    # movie_times for a movie will be in following td_split item
+    for (i, movie) in enumerate(movie_list):
+        movie_name = movie[2].strip()
+        imdb_link = movie[1].strip()
+        time_str = td_splits[i+1].strip()
+
+        # if (movieyear) string is after link and ends up in time_str,
+        #   cut it out and append it to movie_name
+        movieyear_moviename_re = re.search(r"\(\D*\d{4}\D*\)\s*$", movie_name)
+        movieyear_timestr_re =re.search(r"^\s*(\(\D*\d{4}\D*\))", time_str)
+        if not movieyear_moviename_re and movieyear_timestr_re:
+            movieyear_str = movieyear_timestr_re.group(1)
+            movie_name = movie_name + " " + movieyear_str
+            time_str = re.sub(re.escape(movieyear_str), "", time_str).strip()
+
+        if time_str !="":
+            # clean up movie times
+            movie_times = process_movie_time_str(time_str)
+
+            # append to movies for this date
+            movies.append((movie_name, imdb_link, movie_times))
+
+    if td_startdate is not None:
+        movie_return = []
+        for movie in movies:
+            (movie_name, imdb_link, movie_times) = movie
+            movie_return.append(
+                    {
+                        'name':movie_name,
+                        'imdb_url':imdb_link,
+                        'show_startdate':td_startdate,
+                        'show_enddate':td_enddate,
+                        'show_times':movie_times,
+                        }
+                    )
+        return movie_return
+    else:
+        return None
 
 
 def parse_td(td, calendar_year, verbose=False):
@@ -159,38 +338,7 @@ def parse_td(td, calendar_year, verbose=False):
                     #   July 18-19
                     #   August 31-September 1
                     #   December 24
-                    month_regexp = "(" + "|".join(MONTHS) + ")"
-                    onemonth_multdate_re = re.search(
-                            month_regexp + r"\s+(\d+)\s*-\s*(\d+)($|\D)",
-                            content
-                            )
-                    multmonth_multdate_re = re.search(
-                            month_regexp + r"\s+(\d+)\s*-\s*" + month_regexp + r"\s*(\d+)($|\D)",
-                            content
-                            )
-                    # note: will also match last date in multmonth_multdate_re
-                    onemonth_onedate_re = re.search(
-                            month_regexp + r"\s+(\d+)\s*($|[^-])",
-                            content
-                            )
-                    if onemonth_multdate_re:
-                        month_start_num = MONTHS.index(onemonth_multdate_re.group(1)) + 1
-                        date_start_num = int(onemonth_multdate_re.group(2))
-                        month_end_num = month_start_num
-                        date_end_num = int(onemonth_multdate_re.group(3))
-                    elif multmonth_multdate_re:
-                        month_start_num = MONTHS.index(multmonth_multdate_re.group(1)) + 1
-                        date_start_num = int(multmonth_multdate_re.group(2))
-                        month_end_num = MONTHS.index(multmonth_multdate_re.group(3)) + 1
-                        date_end_num = int(multmonth_multdate_re.group(4))
-                    elif onemonth_onedate_re:
-                        month_start_num = MONTHS.index(onemonth_onedate_re.group(1)) + 1
-                        date_start_num = int(onemonth_onedate_re.group(2))
-                        month_end_num = month_start_num
-                        date_end_num = date_start_num
-                    td_startdate = (calendar_year, month_start_num, date_start_num)
-                    td_enddate = (calendar_year, month_end_num, date_end_num)
-
+                    (td_startdate, td_enddate) = parse_datestr(content, calendar_year)
                 elif isinstance(content, Tag) and content.name == 'br':
                     # ignore line break tags </br>
                     pass
@@ -620,7 +768,15 @@ def parse_html_calendar(html_file, verbose=False):
     #   (but html5lib should clean this up and add a <tr>)
     play_dates = []
     for td in tables[0].find_all('td'):
+        td_play_dates_new = parse_td_new(td, calendar_year, verbose=verbose)
         td_play_dates = parse_td(td, calendar_year, verbose=verbose)
+
+        #if td_play_dates is not None and td_play_dates_new is not None:
+        #    # DEBUG
+        #    print("td_play_dates_new:")
+        #    print(td_play_dates_new)
+        #    print("td_play_dates:")
+        #    print(td_play_dates)
 
         if td_play_dates is not None:
             play_dates.extend(td_play_dates)
