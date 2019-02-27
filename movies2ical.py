@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+# TODO: incorporate shorts without their own times into main feature
+#       description
+# TODO: clip movie plots that are too long
+
 import re
 import sys
 import argparse
