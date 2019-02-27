@@ -263,7 +263,7 @@ def parse_td_new(td_in, calendar_year, verbose=False):
             # append to movies for this date
             movies.append((movie_name, imdb_link, movie_times))
 
-    if td_startdate is not None:
+    if td_startdate is not None and movie_times:
         movie_return = []
         for movie in movies:
             (movie_name, imdb_link, movie_times) = movie
