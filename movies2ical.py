@@ -3,6 +3,7 @@
 # TODO: incorporate shorts without their own times into main feature
 #       description
 # TODO: clip movie plots that are too long
+# TODO: properly handle unicode in imdb data
 
 import re
 import sys
