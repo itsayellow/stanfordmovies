@@ -11,6 +11,7 @@ import urllib.request
 import urllib.error
 import urllib.parse
 
+import bleach
 from bs4 import BeautifulSoup, Tag
 from icalendar import Calendar, Event
 from imdb import IMDb
@@ -235,9 +236,6 @@ def parse_td_new(td_in, calendar_year, verbose=False):
     # extract month, date for this playdate
     (td_startdate, td_enddate) = extract_playdate(td, calendar_year)
 
-    # remove all tags except <a> (e.g. remove <p>, <i>, <b>, ...)
-    strip_nonlink_tags(td)
-
     # split text inside td on full movie link texts, yielding a list of strings
     #   in-between movie names/links.  These will contain times.
     movie_regexs = [re.escape(x[0]) for x in movie_list]
@@ -253,9 +251,10 @@ def parse_td_new(td_in, calendar_year, verbose=False):
     #   strings
     # movie_times for a movie will be in following td_split item
     for (i, movie) in enumerate(movie_list):
-        movie_name = movie[2].strip()
+        # remove all tags to get text
+        movie_name = bleach.clean(movie[2].strip(), tags=[], strip=True)
         imdb_link = movie[1].strip()
-        time_str = td_splits[i+1].strip()
+        time_str = bleach.clean(td_splits[i+1].strip(), tags=[], strip=True)
 
         # if (movieyear) string is after link and ends up in time_str,
         #   cut it out and append it to movie_name
