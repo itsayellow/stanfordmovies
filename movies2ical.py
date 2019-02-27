@@ -87,6 +87,9 @@ def process_command_line(argv):
 
 
 def process_movie_time_str(movie_time):
+    # Eliminate text after "ticket sale"
+    #   Usually is entry saying what time tickets go on sale, not movie time.
+    movie_time = re.sub(r"ticket.+sale.+$", "", movie_time, re.I)
     # Check every string in parentheses.
     #   Can be extra time typically for sat and/or sun
     #   Can be random jibberish
