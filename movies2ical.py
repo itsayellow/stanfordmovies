@@ -420,7 +420,11 @@ def fetch_imdb_info_cache(imdb_movie_num, movie_name):
         imdb_movie['writer'] = [str(x) for x in imdb_movie_web['writer']]
         imdb_movie['cast'] = [str(x) for x in imdb_movie_web['cast']]
         imdb_movie['runtimes'] = [str(x) for x in imdb_movie_web['runtimes']]
-        imdb_movie['plot'] = [str(x) for x in imdb_movie_web['plot']]
+        try:
+            imdb_movie['plot'] = [str(x) for x in imdb_movie_web['plot']]
+        except KeyError:
+            # no plot in imdb info
+            imdb_movie['plot'] = ["",]
         imdb_movie['year'] = int(imdb_movie_web['year'])
         imdb_movie['rating'] = float(imdb_movie_web['rating'])
 
