@@ -87,13 +87,12 @@ def process_command_line(argv):
 
 
 def process_movie_time_str(movie_time):
-    # Check for a string in parentheses.
+    # Check every string in parentheses.
     #   Can be extra time typically for sat and/or sun
     #   Can be random jibberish
-    # NOTE: currently this only looks for one parenthetical string
     time_extra = None
     paren_re = re.search(r"\(([^)]*)\)", movie_time)
-    if paren_re:
+    while paren_re:
         paren_full = paren_re.group(1)
         time_extra_re = re.search(r"(\d+:\d\d)", paren_full)
         if time_extra_re:
@@ -106,6 +105,7 @@ def process_movie_time_str(movie_time):
             print("Warning: extra movie time "+paren_full+" is unparseable.")
         # remove extra string in parens
         movie_time = re.sub(re.escape(paren_re.group(0)), "", movie_time).strip()
+        paren_re = re.search(r"\(([^)]*)\)", movie_time)
 
     # change all non-digit, non-: to single space character
     movie_time = re.sub(r"[^0-9:]+", " ", movie_time).strip()
