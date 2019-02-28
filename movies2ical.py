@@ -237,7 +237,7 @@ def parse_td(td, calendar_year, verbose=False):
     td_splits = [re.sub(r"\s+", " ", x) for x in td_splits]
 
     # len(td_splits) = len(movie_list) + 1
-    # td_splits consists of a list of all text preceding/following movie link 
+    # td_splits consists of a list of all text preceding/following movie link
     #   strings
     # movie_times for a movie will be in following td_split item
     for (i, movie) in enumerate(movie_list):
