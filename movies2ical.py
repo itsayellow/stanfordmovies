@@ -226,8 +226,8 @@ def parse_td(td, calendar_year, verbose=False):
     # extract month, date for this playdate
     (td_startdate, td_enddate) = extract_playdate(td, calendar_year)
 
-    # split text inside td on full movie link texts, yielding a list of strings
-    #   in-between movie names/links.  These will contain times.
+    # split text inside td on full movie link strings, yielding a list of
+    #   strings in-between movie names/links.  These will contain times.
     movie_regexs = [re.escape(x[0]) for x in movie_list]
     td_splits = re.split(
             r"(?:" + "|".join(movie_regexs) + r")",
