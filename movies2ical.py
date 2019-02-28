@@ -2,7 +2,6 @@
 
 # TODO: incorporate shorts without their own times into main feature
 #       description
-# TODO: clip movie plots that are too long
 # TODO: properly handle unicode in imdb data
 
 import re
@@ -26,6 +25,9 @@ from tzlocal import get_localzone
 
 # Stanford Theatre base url
 THEATER_BASEURL = r"http://www.stanfordtheatre.org/"
+
+# How many characters to limit plot descriptions to in entries
+MAX_PLOT_LEN = 800
 
 # Stanford Theatre is in the same timezone as Los Angeles
 THEATER_TZ = pytz.timezone('America/Los_Angeles')
@@ -481,6 +483,11 @@ def movie_synopsis(play_date):
     out_str = ""
 
     plot = re.sub(r"::.*$", "", play_date['imdb_info']['plot'][-1])
+    # cut off plot descriptions that are too long
+    if len(plot) > MAX_PLOT_LEN:
+        plot = plot[:MAX_PLOT_LEN]
+        # end plot string at end of word, add elipsis
+        plot = re.sub(r"\s+\S*$", "", plot) + "..."
     out_str += play_date['imdb_url']
     out_str += "\n\n"
     out_str += plot
