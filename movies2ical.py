@@ -989,8 +989,9 @@ def main(argv=None):
         # (debug) text report of play_dates
         #report_playdates(play_dates)
 
-        # write ical
-        gen_ical(play_dates, ical_filename=ics_filename)
+        # write ical if we have any valid playdates
+        if play_dates:
+            gen_ical(play_dates, ical_filename=ics_filename)
 
         # print "finished" at date/time message
         print("Finished at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"))
