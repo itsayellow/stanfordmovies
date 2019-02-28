@@ -256,14 +256,14 @@ def parse_td_new(td, calendar_year, verbose=False):
             movie_name = movie_name + " " + movieyear_str
             time_str = re.sub(re.escape(movieyear_str), "", time_str).strip()
 
-        if time_str !="":
-            # clean up movie times
-            movie_times = process_movie_time_str(time_str)
+        # clean up movie times and parse to list
+        movie_times = process_movie_time_str(time_str)
 
-            # append to movies for this date
+        if movie_times:
+            # append to movies for this date if we have at least one valid time
             movies.append((movie_name, imdb_link, movie_times))
 
-    if td_startdate is not None and movie_times:
+    if td_startdate is not None and movies:
         movie_return = []
         for movie in movies:
             (movie_name, imdb_link, movie_times) = movie
