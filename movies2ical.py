@@ -213,14 +213,11 @@ def extract_movies_imdb(td):
     return movies
 
 
-def parse_td_new(td_in, calendar_year, verbose=False):
+def parse_td_new(td, calendar_year, verbose=False):
     # init
     movies = []
 
-    # lets not destroy original tree - make a copy of td before we modify it
-    td = copy.copy(td_in)
-
-    # extract all links to imdb movies and text they wrap
+    # extract all links to imdb movies and text they contain
     movie_list = extract_movies_imdb(td)
     # if this td has no imdb link contained in it, presume not a movie playdate
     #   and return immediately
