@@ -7,7 +7,6 @@
 import re
 import sys
 import argparse
-import copy
 import datetime
 import json
 from pathlib import Path
@@ -213,7 +212,7 @@ def extract_movies_imdb(td):
     return movies
 
 
-def parse_td_new(td, calendar_year, verbose=False):
+def parse_td(td, calendar_year, verbose=False):
     # init
     movies = []
 
@@ -767,7 +766,7 @@ def parse_html_calendar(html_file, verbose=False):
     #   (but html5lib should clean this up and add a <tr>)
     play_dates = []
     for td in tables[0].find_all('td'):
-        td_play_dates = parse_td_new(td, calendar_year, verbose=verbose)
+        td_play_dates = parse_td(td, calendar_year, verbose=verbose)
         #td_play_dates = parse_td(td, calendar_year, verbose=verbose)
 
         if td_play_dates is not None:
