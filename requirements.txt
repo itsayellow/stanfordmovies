@@ -1,4 +1,6 @@
 # requirements file for movies2ical
+
+# pypi packages
 bleach
 beautifulsoup4
 icalendar
