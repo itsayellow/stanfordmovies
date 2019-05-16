@@ -29,13 +29,13 @@ put local.CheckStanfordMovieSchedule.plist into ~/Library/LaunchAgents/
 to put into launchd system
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-::
+.. code:: bash
 
     launchctl load ~/Library/LaunchAgents/local.CheckStanfordMovieSchedule.plist
 
 To remove from launchd system
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-::
+.. code:: bash
 
     launchctl unload ~/Library/LaunchAgents/local.CheckStanfordMovieSchedule.plist
