@@ -963,7 +963,9 @@ def main(argv=None):
     THEATER_CACHE_DIR.mkdir(exist_ok=True)
 
     print("-"*78)
+    print("Started at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"))
     print("-"*78, file=sys.stderr)
+    print("Started at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"), file=sys.stderr)
     if args.file:
         srcfiles = [Path(x) for x in args.srcfile]
     else:
