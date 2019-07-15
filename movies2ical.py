@@ -913,7 +913,7 @@ def fetch_schedule_htmls():
     cal_links = list(set(cal_links))
     if 'calendars/index.html' in cal_links:
         cal_links.remove('calendars/index.html')
-    #cal_links = [urllib.parse.quote(x) for x in cal_links]
+    cal_links = [urllib.parse.quote(x) for x in cal_links]
 
     fetched_files = []
     for cal_link in cal_links:
