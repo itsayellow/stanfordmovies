@@ -963,6 +963,7 @@ def main(argv=None):
     THEATER_CACHE_DIR.mkdir(exist_ok=True)
 
     print("-"*78)
+    print("-"*78, file=sys.stderr)
     if args.file:
         srcfiles = [Path(x) for x in args.srcfile]
     else:
@@ -971,6 +972,8 @@ def main(argv=None):
     for srcfile in srcfiles:
         print("-"*30)
         print(srcfile.name)
+        print("-"*30, file=sys.stderr)
+        print(srcfile.name, file=sys.stderr)
 
         ics_filename = ICAL_OUT_DIR / (srcfile.stem + '.ics')
 
@@ -995,6 +998,7 @@ def main(argv=None):
 
         # print "finished" at date/time message
         print("Finished at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"))
+        print("Finished at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"), file=sys.stderr)
 
     return 0
 
