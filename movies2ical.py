@@ -46,6 +46,7 @@ THEATER_CACHE_DIR = CACHE_ROOT_DIR / "stanford_movie_cache"
 # months in order to convert to/from numbers
 MONTHS = ["January", "February", "March", "April", "May", "June", "July",
         "August", "September", "October", "November", "December"]
+MONTHS.extend(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
 
 IS_TTY = sys.stdout.isatty()
 
@@ -149,6 +150,7 @@ def parse_datestr(content_str, calendar_year):
     #   July 18-19
     #   August 31-September 1
     #   December 24
+    #   Oct 3-4
     month_regexp = "(" + "|".join(MONTHS) + ")"
     onemonth_multdate_re = re.search(
             month_regexp + r"\s+(\d+)\s*-\s*(\d+)($|\D)",
@@ -164,17 +166,17 @@ def parse_datestr(content_str, calendar_year):
             content_str
             )
     if onemonth_multdate_re:
-        month_start_num = MONTHS.index(onemonth_multdate_re.group(1)) + 1
+        month_start_num = MONTHS.index(onemonth_multdate_re.group(1))%12 + 1
         date_start_num = int(onemonth_multdate_re.group(2))
         month_end_num = month_start_num
         date_end_num = int(onemonth_multdate_re.group(3))
     elif multmonth_multdate_re:
-        month_start_num = MONTHS.index(multmonth_multdate_re.group(1)) + 1
+        month_start_num = MONTHS.index(multmonth_multdate_re.group(1))%12 + 1
         date_start_num = int(multmonth_multdate_re.group(2))
-        month_end_num = MONTHS.index(multmonth_multdate_re.group(3)) + 1
+        month_end_num = MONTHS.index(multmonth_multdate_re.group(3))%12 + 1
         date_end_num = int(multmonth_multdate_re.group(4))
     elif onemonth_onedate_re:
-        month_start_num = MONTHS.index(onemonth_onedate_re.group(1)) + 1
+        month_start_num = MONTHS.index(onemonth_onedate_re.group(1))%12 + 1
         date_start_num = int(onemonth_onedate_re.group(2))
         month_end_num = month_start_num
         date_end_num = date_start_num
