@@ -29,7 +29,7 @@ THEATER_BASEURL = r"http://www.stanfordtheatre.org/"
 MAX_PLOT_LEN = 800
 
 # Stanford Theatre is in the same timezone as Los Angeles
-THEATER_TZ = pytz.timezone('America/Los_Angeles')
+THEATER_TZ = pytz.timezone("America/Los_Angeles")
 
 # where to store cached imdb json files and stanford movie html files
 CACHE_ROOT_DIR = Path(sys.argv[0]).absolute().parent
@@ -44,10 +44,26 @@ ICAL_OUT_DIR = Path(".")
 THEATER_CACHE_DIR = CACHE_ROOT_DIR / "stanford_movie_cache"
 
 # months in order to convert to/from numbers
-MONTHS = ["January", "February", "March", "April", "May", "June", "July",
-        "August", "September", "October", "November", "December"]
+MONTHS = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+]
+MONTHS.extend(
+    ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+)
 
 IS_TTY = sys.stdout.isatty()
+
 
 def process_command_line(argv):
     """Process command line invocation arguments and switches.
@@ -58,34 +74,41 @@ def process_command_line(argv):
     Returns:
         args: Namespace with named attributes of arguments and switches
     """
-    #script_name = argv[0]
+    # script_name = argv[0]
     argv = argv[1:]
 
     # initialize the parser object:
     parser = argparse.ArgumentParser(
-            description="Fetch latest web calendar from the Stanford "\
-                    "Theatre, and convert it to ical format, complete "
-                    "with info from imdb.com")
+        description="Fetch latest web calendar from the Stanford "
+        "Theatre, and convert it to ical format, complete "
+        "with info from imdb.com"
+    )
 
     # specifying nargs= puts outputs of parser in list (even if nargs=1)
 
     # required arguments
-    parser.add_argument('srcfile', nargs='*',
-            help="Source directory (recursively searched)."
-            )
+    parser.add_argument(
+        "srcfile", nargs="*", help="Source directory (recursively searched)."
+    )
 
     # switches/options:
     parser.add_argument(
-        '-f', '--file', action='store_true',
-        help='Parse files from arguments instead of going to '\
-                'www.stanfordtheatre.org to find calendar.')
+        "-f",
+        "--file",
+        action="store_true",
+        help="Parse files from arguments instead of going to "
+        "www.stanfordtheatre.org to find calendar.",
+    )
     parser.add_argument(
-        '-c', '--correct_times', action='store_true',
-        help='If runtime from imdb causes movie end time to overlap next '\
-                'movie\'s scheduled start time, correct end time.')
+        "-c",
+        "--correct_times",
+        action="store_true",
+        help="If runtime from imdb causes movie end time to overlap next "
+        "movie's scheduled start time, correct end time.",
+    )
     parser.add_argument(
-        '-v', '--verbose', action='store_true',
-        help='More verbose messages.')
+        "-v", "--verbose", action="store_true", help="More verbose messages."
+    )
 
     args = parser.parse_args(argv)
 
@@ -111,7 +134,7 @@ def process_movie_time_str(movie_time):
             if re.search(r"sun", paren_full, re.I):
                 time_extra += " sun"
         else:
-            print("Warning: extra movie time "+paren_full+" is unparseable.")
+            print("Warning: extra movie time " + paren_full + " is unparseable.")
         # remove extra string in parens
         movie_time = re.sub(re.escape(paren_re.group(0)), "", movie_time).strip()
         paren_re = re.search(r"\(([^)]*)\)", movie_time)
@@ -150,35 +173,31 @@ def parse_datestr(content_str, calendar_year):
     #   August 31-September 1
     #   December 24
     #   August 31-Sept 3
-
-    # TODO: somebody occasionally uses month abbreviations, need to parse
+    # somebody occasionally uses month abbreviations, need to parse
     #   in month_regexp
+    #   Oct 3-4
     month_regexp = "(" + "|".join(MONTHS) + ")"
     onemonth_multdate_re = re.search(
-            month_regexp + r"\s+(\d+)\s*-\s*(\d+)($|\D)",
-            content_str
-            )
+        month_regexp + r"\s+(\d+)\s*-\s*(\d+)($|\D)", content_str
+    )
     multmonth_multdate_re = re.search(
-            month_regexp + r"\s+(\d+)\s*-\s*" + month_regexp + r"\s*(\d+)($|\D)",
-            content_str
-            )
+        month_regexp + r"\s+(\d+)\s*-\s*" + month_regexp + r"\s*(\d+)($|\D)",
+        content_str,
+    )
     # note: will also match last date in multmonth_multdate_re
-    onemonth_onedate_re = re.search(
-            month_regexp + r"\s+(\d+)\s*($|[^-])",
-            content_str
-            )
+    onemonth_onedate_re = re.search(month_regexp + r"\s+(\d+)\s*($|[^-])", content_str)
     if onemonth_multdate_re:
-        month_start_num = MONTHS.index(onemonth_multdate_re.group(1)) + 1
+        month_start_num = MONTHS.index(onemonth_multdate_re.group(1)) % 12 + 1
         date_start_num = int(onemonth_multdate_re.group(2))
         month_end_num = month_start_num
         date_end_num = int(onemonth_multdate_re.group(3))
     elif multmonth_multdate_re:
-        month_start_num = MONTHS.index(multmonth_multdate_re.group(1)) + 1
+        month_start_num = MONTHS.index(multmonth_multdate_re.group(1)) % 12 + 1
         date_start_num = int(multmonth_multdate_re.group(2))
-        month_end_num = MONTHS.index(multmonth_multdate_re.group(3)) + 1
+        month_end_num = MONTHS.index(multmonth_multdate_re.group(3)) % 12 + 1
         date_end_num = int(multmonth_multdate_re.group(4))
     elif onemonth_onedate_re:
-        month_start_num = MONTHS.index(onemonth_onedate_re.group(1)) + 1
+        month_start_num = MONTHS.index(onemonth_onedate_re.group(1)) % 12 + 1
         date_start_num = int(onemonth_onedate_re.group(2))
         month_end_num = month_start_num
         date_end_num = date_start_num
@@ -187,7 +206,7 @@ def parse_datestr(content_str, calendar_year):
         td_startdate = (calendar_year, month_start_num, date_start_num)
         td_enddate = (calendar_year, month_end_num, date_end_num)
 
-    return(td_startdate, td_enddate)
+    return (td_startdate, td_enddate)
 
 
 def extract_playdate(td, calendar_year):
@@ -209,9 +228,9 @@ def extract_movies_imdb(td):
     movies = []
 
     for link in td.find_all("a"):
-        if re.search(r"https?://[^/]*imdb\.", link['href']):
+        if re.search(r"https?://[^/]*imdb\.", link["href"]):
             movie_text = "".join([str(x) for x in link.contents])
-            movies.append([str(link), link['href'], movie_text])
+            movies.append([str(link), link["href"], movie_text])
 
     return movies
 
@@ -234,9 +253,8 @@ def parse_td(td, calendar_year, verbose=False):
     #   strings in-between movie names/links.  These will contain times.
     movie_regexs = [re.escape(x[0]) for x in movie_list]
     td_splits = re.split(
-            r"(?:" + "|".join(movie_regexs) + r")",
-            "".join([str(x) for x in td.contents])
-            )
+        r"(?:" + "|".join(movie_regexs) + r")", "".join([str(x) for x in td.contents])
+    )
     # replace many space-like characters in a row with one space for all strings
     td_splits = [re.sub(r"\s+", " ", x) for x in td_splits]
 
@@ -248,12 +266,12 @@ def parse_td(td, calendar_year, verbose=False):
         # remove all tags to get text
         movie_name = bleach.clean(movie[2].strip(), tags=[], strip=True)
         imdb_link = movie[1].strip()
-        time_str = bleach.clean(td_splits[i+1].strip(), tags=[], strip=True)
+        time_str = bleach.clean(td_splits[i + 1].strip(), tags=[], strip=True)
 
         # if (movieyear) string is after link and ends up in time_str,
         #   cut it out and append it to movie_name
         movieyear_moviename_re = re.search(r"\(\D*\d{4}\D*\)\s*$", movie_name)
-        movieyear_timestr_re =re.search(r"^\s*(\(\D*\d{4}\D*\))", time_str)
+        movieyear_timestr_re = re.search(r"^\s*(\(\D*\d{4}\D*\))", time_str)
         if not movieyear_moviename_re and movieyear_timestr_re:
             movieyear_str = movieyear_timestr_re.group(1)
             movie_name = movie_name + " " + movieyear_str
@@ -271,20 +289,20 @@ def parse_td(td, calendar_year, verbose=False):
         for movie in movies:
             (movie_name, imdb_link, movie_times) = movie
             movie_return.append(
-                    {
-                        'name':movie_name,
-                        'imdb_url':imdb_link,
-                        'show_startdate':td_startdate,
-                        'show_enddate':td_enddate,
-                        'show_times':movie_times,
-                        }
-                    )
+                {
+                    "name": movie_name,
+                    "imdb_url": imdb_link,
+                    "show_startdate": td_startdate,
+                    "show_enddate": td_enddate,
+                    "show_times": movie_times,
+                }
+            )
         return movie_return
     else:
         return None
 
 
-#def parse_td(td, calendar_year, verbose=False):
+# def parse_td(td, calendar_year, verbose=False):
 #    td_str = str(td)
 #    td_startdate = None
 #    td_enddate = None
@@ -394,7 +412,7 @@ def fetch_imdb_info_cache(imdb_movie_num, movie_name):
     imdb_cache_filename = str(IMDB_CACHE_DIR / imdb_movie_num) + ".json"
 
     try:
-        with open(imdb_cache_filename, 'r') as imdb_cache_fh:
+        with open(imdb_cache_filename, "r") as imdb_cache_fh:
             imdb_movie = json.load(imdb_cache_fh)
     except (FileNotFoundError, PermissionError):
         # only do a CR progress-display if we are in a terminal (not directed
@@ -403,27 +421,27 @@ def fetch_imdb_info_cache(imdb_movie_num, movie_name):
             print("\r", end="")
         else:
             print("\n", end="")
-        print("Fetching info: " + movie_name + " "*(60-len(movie_name)), end="")
+        print("Fetching info: " + movie_name + " " * (60 - len(movie_name)), end="")
 
         ia = IMDb()
-        imdb_movie_web = ia.get_movie(imdb_movie_num, info=['main', 'plot'])
+        imdb_movie_web = ia.get_movie(imdb_movie_num, info=["main", "plot"])
 
         imdb_movie = {}
-        imdb_movie['title'] = str(imdb_movie_web['title'])
-        imdb_movie['director'] = [str(x) for x in imdb_movie_web['director']]
-        imdb_movie['writer'] = [str(x) for x in imdb_movie_web['writer']]
-        imdb_movie['cast'] = [str(x) for x in imdb_movie_web['cast']]
-        imdb_movie['runtimes'] = [str(x) for x in imdb_movie_web['runtimes']]
+        imdb_movie["title"] = str(imdb_movie_web["title"])
+        imdb_movie["director"] = [str(x) for x in imdb_movie_web["director"]]
+        imdb_movie["writer"] = [str(x) for x in imdb_movie_web["writer"]]
+        imdb_movie["cast"] = [str(x) for x in imdb_movie_web["cast"]]
+        imdb_movie["runtimes"] = [str(x) for x in imdb_movie_web["runtimes"]]
         try:
-            imdb_movie['plot'] = [str(x) for x in imdb_movie_web['plot']]
+            imdb_movie["plot"] = [str(x) for x in imdb_movie_web["plot"]]
         except KeyError:
             # no plot in imdb info
-            imdb_movie['plot'] = ["",]
-        imdb_movie['year'] = int(imdb_movie_web['year'])
-        imdb_movie['rating'] = float(imdb_movie_web['rating'])
+            imdb_movie["plot"] = [""]
+        imdb_movie["year"] = int(imdb_movie_web["year"])
+        imdb_movie["rating"] = float(imdb_movie_web["rating"])
 
         try:
-            with open(imdb_cache_filename, 'w') as imdb_cache_fh:
+            with open(imdb_cache_filename, "w") as imdb_cache_fh:
                 json.dump(imdb_movie, imdb_cache_fh)
         except (IsADirectoryError, PermissionError) as err:
             print("Can't write to imdb_cache dir")
@@ -437,25 +455,25 @@ def fetch_imdb_info_cache(imdb_movie_num, movie_name):
 
 def get_imdb_info(play_dates):
     for play_date in play_dates:
-        imdb_mnum_re = re.search(r"\/tt(\d+)", play_date['imdb_url'])
+        imdb_mnum_re = re.search(r"\/tt(\d+)", play_date["imdb_url"])
         if imdb_mnum_re:
             imdb_movie_num = imdb_mnum_re.group(1)
 
-        imdb_movie = fetch_imdb_info_cache(imdb_movie_num, play_date['name'])
+        imdb_movie = fetch_imdb_info_cache(imdb_movie_num, play_date["name"])
 
-        play_date['imdb_info'] = {}
-        play_date['imdb_info']['title'] = imdb_movie['title']
-        play_date['imdb_info']['director'] = imdb_movie['director']
-        play_date['imdb_info']['writer'] = imdb_movie['writer']
-        play_date['imdb_info']['cast'] = imdb_movie['cast']
-        play_date['imdb_info']['runtimes'] = imdb_movie['runtimes']
-        play_date['imdb_info']['plot'] = imdb_movie['plot']
-        play_date['imdb_info']['year'] = imdb_movie['year']
-        play_date['imdb_info']['rating'] = imdb_movie['rating']
+        play_date["imdb_info"] = {}
+        play_date["imdb_info"]["title"] = imdb_movie["title"]
+        play_date["imdb_info"]["director"] = imdb_movie["director"]
+        play_date["imdb_info"]["writer"] = imdb_movie["writer"]
+        play_date["imdb_info"]["cast"] = imdb_movie["cast"]
+        play_date["imdb_info"]["runtimes"] = imdb_movie["runtimes"]
+        play_date["imdb_info"]["plot"] = imdb_movie["plot"]
+        play_date["imdb_info"]["year"] = imdb_movie["year"]
+        play_date["imdb_info"]["rating"] = imdb_movie["rating"]
 
     # blank out last "Fetching data" line if we're in a terminal, else just \n
     if sys.stdout.isatty():
-        print("\r" + " "*78)
+        print("\r" + " " * 78)
     else:
         print("\n", end="")
 
@@ -482,22 +500,22 @@ def persons_list_print(person_list):
 def movie_synopsis(play_date):
     out_str = ""
 
-    plot = re.sub(r"::.*$", "", play_date['imdb_info']['plot'][-1])
+    plot = re.sub(r"::.*$", "", play_date["imdb_info"]["plot"][-1])
     # cut off plot descriptions that are too long
     if len(plot) > MAX_PLOT_LEN:
         plot = plot[:MAX_PLOT_LEN]
         # end plot string at end of word, add elipsis
         plot = re.sub(r"\s+\S*$", "", plot) + "..."
-    out_str += play_date['imdb_url']
+    out_str += play_date["imdb_url"]
     out_str += "\n\n"
     out_str += plot
     out_str += "\n\n"
-    out_str += "Director" + persons_list_print(play_date['imdb_info']['director'])
+    out_str += "Director" + persons_list_print(play_date["imdb_info"]["director"])
     out_str += "\n"
-    out_str += "Writer" + persons_list_print(play_date['imdb_info']['writer'])
+    out_str += "Writer" + persons_list_print(play_date["imdb_info"]["writer"])
     out_str += "\n\n"
     out_str += "Cast:\n"
-    for cast_member in play_date['imdb_info']['cast'][:10]:
+    for cast_member in play_date["imdb_info"]["cast"][:10]:
         out_str += cast_member + "\n"
 
     return out_str
@@ -507,19 +525,19 @@ def report_playdates(play_dates):
     """Debug function to print out a text representation of play dates
     """
     for play_date in play_dates:
-        print("-"*78)
-        print(play_date['name'])
-        print(play_date['show_startdate'][0], end="")
+        print("-" * 78)
+        print(play_date["name"])
+        print(play_date["show_startdate"][0], end="")
         print(" ", end="")
-        print(MONTHS[play_date['show_startdate'][1] - 1], end="")
-        print(" " + str(play_date['show_startdate'][2]), end="")
+        print(MONTHS[play_date["show_startdate"][1] - 1], end="")
+        print(" " + str(play_date["show_startdate"][2]), end="")
         print(" - ", end="")
-        print(play_date['show_enddate'][0], end="")
+        print(play_date["show_enddate"][0], end="")
         print(" ", end="")
-        print(MONTHS[play_date['show_enddate'][1] - 1], end="")
-        print(" " + str(play_date['show_enddate'][2]))
-        print(play_date['show_times'])
-        print("Runtimes: " + str(play_date['imdb_info']['runtimes']))
+        print(MONTHS[play_date["show_enddate"][1] - 1], end="")
+        print(" " + str(play_date["show_enddate"][2]))
+        print(play_date["show_times"])
+        print("Runtimes: " + str(play_date["imdb_info"]["runtimes"]))
         print("")
 
         print(movie_synopsis(play_date))
@@ -528,13 +546,13 @@ def report_playdates(play_dates):
 def compute_datetimes(play_dates):
     for play_date in play_dates:
         # TODO: check for other runtimes instead of just using first one
-        runtime = int(play_date['imdb_info']['runtimes'][0])
-        play_date_start = datetime.date(*play_date['show_startdate'])
-        play_date_end = datetime.date(*play_date['show_enddate'])
+        runtime = int(play_date["imdb_info"]["runtimes"][0])
+        play_date_start = datetime.date(*play_date["show_startdate"])
+        play_date_end = datetime.date(*play_date["show_enddate"])
 
-        play_date['showings'] = []
+        play_date["showings"] = []
 
-        for show_time in play_date['show_times']:
+        for show_time in play_date["show_times"]:
             if " " not in show_time:
                 # normal showtime every day in range
                 this_time = show_time
@@ -553,13 +571,15 @@ def compute_datetimes(play_dates):
                 if "sat" in show_time:
                     # set this_play_date_start to saturday (weekday=5) after
                     #   play_date_start
-                    this_play_date_start = play_date_start + \
-                            datetime.timedelta(days=5-weekday_start)
+                    this_play_date_start = play_date_start + datetime.timedelta(
+                        days=5 - weekday_start
+                    )
                 if "sun" in show_time:
                     # set this_play_date_end to sunday (weekday=6) after
                     #   play_date_start
-                    this_play_date_end = play_date_start + \
-                            datetime.timedelta(days=6-weekday_start)
+                    this_play_date_end = play_date_start + datetime.timedelta(
+                        days=6 - weekday_start
+                    )
                 if not this_play_date_start:
                     this_play_date_start = this_play_date_end
                 if not this_play_date_end:
@@ -577,9 +597,8 @@ def compute_datetimes(play_dates):
             #   for some reason using tzinfo with datetime.combine
             #   gives a strange timezone (-07:53)
             datetime_start = datetime.datetime.combine(
-                    this_play_date_start,
-                    datetime.time(hour, minute, 0)
-                    )
+                this_play_date_start, datetime.time(hour, minute, 0)
+            )
             # put extracted time in THEATER timezone
             datetime_start = THEATER_TZ.localize(datetime_start)
             # Convert to UTC timezone
@@ -589,48 +608,48 @@ def compute_datetimes(play_dates):
             # rrule_count is how many days including this one
             rrule_count = (this_play_date_end - this_play_date_start).days + 1
 
-            play_date['showings'].append(
-                    {
-                        'datetime_start':datetime_start,
-                        'datetime_end':datetime_end,
-                        'rrule_count':rrule_count,
-                        }
-                    )
+            play_date["showings"].append(
+                {
+                    "datetime_start": datetime_start,
+                    "datetime_end": datetime_end,
+                    "rrule_count": rrule_count,
+                }
+            )
 
 
-def gen_ical(play_dates, ical_filename='test.ics'):
+def gen_ical(play_dates, ical_filename="test.ics"):
     cal = Calendar()
-    cal.add('prodid', '-//Stanford Theatre Calendar//itsayellow@gmail.com//')
-    cal.add('version', '3.0')
+    cal.add("prodid", "-//Stanford Theatre Calendar//itsayellow@gmail.com//")
+    cal.add("version", "3.0")
     location = "221 University Ave, Palo Alto, CA (Stanford Theatre)"
 
     for play_date in play_dates:
-        for showing in play_date['showings']:
-            datetime_start = showing['datetime_start']
-            datetime_end = showing['datetime_end']
-            rrule_count = showing['rrule_count']
+        for showing in play_date["showings"]:
+            datetime_start = showing["datetime_start"]
+            datetime_end = showing["datetime_end"]
+            rrule_count = showing["rrule_count"]
 
             # unique uid for each event
-            uid = datetime_start.strftime('%Y%m%dT%H%M%S%Z')
-            uid += '@itsayellow.com'
+            uid = datetime_start.strftime("%Y%m%dT%H%M%S%Z")
+            uid += "@itsayellow.com"
 
             # assemble event and add to calendar
             event = Event()
-            event.add('dtstart', datetime_start)
-            event.add('dtend', datetime_end)
-            event.add('dtstamp', datetime_start)
-            event.add('uid', uid)
+            event.add("dtstart", datetime_start)
+            event.add("dtend", datetime_end)
+            event.add("dtstamp", datetime_start)
+            event.add("uid", uid)
             if rrule_count > 1:
-                event.add('rrule', {'FREQ':'DAILY', 'COUNT':rrule_count})
-            event.add('summary', play_date['name'])
-            event.add('url', play_date['imdb_url'])
-            event.add('description', movie_synopsis(play_date))
-            event.add('location', location)
+                event.add("rrule", {"FREQ": "DAILY", "COUNT": rrule_count})
+            event.add("summary", play_date["name"])
+            event.add("url", play_date["imdb_url"])
+            event.add("description", movie_synopsis(play_date))
+            event.add("location", location)
             cal.add_component(event)
 
     # icalendar writes out bytes, so use 'wb'
     try:
-        with open(ical_filename, 'wb') as ical_fh:
+        with open(ical_filename, "wb") as ical_fh:
             ical_fh.write(cal.to_ical())
     except (IsADirectoryError, PermissionError) as err:
         print("Can't write: " + str(ical_filename))
@@ -643,9 +662,9 @@ def gen_ical(play_dates, ical_filename='test.ics'):
 def check_name_year_consistency(play_dates):
     # check if stanford theatre name & year doesn't match imdb name & year
     for play_date in play_dates:
-        stan_name = play_date['name']
-        imdb_name = play_date['imdb_info']['title']
-        imdb_year = play_date['imdb_info']['year']
+        stan_name = play_date["name"]
+        imdb_name = play_date["imdb_info"]["title"]
+        imdb_year = play_date["imdb_info"]["year"]
 
         stan_year_re = re.search(r"\(.*(19\d\d).*\)", stan_name)
         if stan_year_re:
@@ -658,22 +677,24 @@ def check_name_year_consistency(play_dates):
         stan_name_cmp = stan_name.lower()
         imdb_name_cmp = imdb_name.lower()
         # ignore all double-quotes
-        stan_name_cmp = re.sub(r'"', '', stan_name_cmp)
-        imdb_name_cmp = re.sub(r'"', '', imdb_name_cmp)
+        stan_name_cmp = re.sub(r'"', "", stan_name_cmp)
+        imdb_name_cmp = re.sub(r'"', "", imdb_name_cmp)
         # ignore beginning "the"
         stan_name_cmp = re.sub(r"the\s+", "", stan_name_cmp, re.I)
         imdb_name_cmp = re.sub(r"the\s+", "", imdb_name_cmp, re.I)
 
-        show_date_str = MONTHS[play_date['showings'][0]['datetime_start'].month - 1] + \
-                " %d"%play_date['showings'][0]['datetime_start'].day
+        show_date_str = (
+            MONTHS[play_date["showings"][0]["datetime_start"].month - 1]
+            + " %d" % play_date["showings"][0]["datetime_start"].day
+        )
         if stan_name_cmp != imdb_name_cmp:
-            print("%s, Warning, inconsistent title:"%show_date_str)
+            print("%s, Warning, inconsistent title:" % show_date_str)
             print("    Stanford Theatre: " + stan_name)
             print("                IMDb: " + imdb_name)
         if stan_year != imdb_year:
-            print("%s, Warning, inconsistent year:"%show_date_str)
-            print("    Stanford Theatre: %s (%d)"%(stan_name, stan_year))
-            print("                IMDb: %s (%d)"%(imdb_name, imdb_year))
+            print("%s, Warning, inconsistent year:" % show_date_str)
+            print("    Stanford Theatre: %s (%d)" % (stan_name, stan_year))
+            print("                IMDb: %s (%d)" % (imdb_name, imdb_year))
 
 
 def check_schedule_overlap(play_dates, correct_endtimes=False):
@@ -681,40 +702,58 @@ def check_schedule_overlap(play_dates, correct_endtimes=False):
     #   before movie 2 ends)
     # O(n!)
     for (i, play_date1) in enumerate(play_dates):
-        for play_date2 in play_dates[i+1:]:
-            for showing1 in play_date1['showings']:
-                for showing2 in play_date2['showings']:
+        for play_date2 in play_dates[i + 1 :]:
+            for showing1 in play_date1["showings"]:
+                for showing2 in play_date2["showings"]:
                     show_start_name = None
 
-                    if showing1['datetime_start'] < showing2['datetime_start'] < showing1['datetime_end']:
-                        show_end_name = play_date1['name']
-                        show_end_time = showing1['datetime_end']
-                        show_start_name = play_date2['name']
-                        show_start_time = showing2['datetime_start']
+                    if (
+                        showing1["datetime_start"]
+                        < showing2["datetime_start"]
+                        < showing1["datetime_end"]
+                    ):
+                        show_end_name = play_date1["name"]
+                        show_end_time = showing1["datetime_end"]
+                        show_start_name = play_date2["name"]
+                        show_start_time = showing2["datetime_start"]
                         if correct_endtimes:
-                            showing1['datetime_end'] = showing2['datetime_start'] - \
-                                    datetime.timedelta(minutes=1)
-                    if showing2['datetime_start'] < showing1['datetime_start'] < showing2['datetime_end']:
-                        show_end_name = play_date2['name']
-                        show_end_time = showing2['datetime_end']
-                        show_start_name = play_date1['name']
-                        show_start_time = showing1['datetime_start']
+                            showing1["datetime_end"] = showing2[
+                                "datetime_start"
+                            ] - datetime.timedelta(minutes=1)
+                    if (
+                        showing2["datetime_start"]
+                        < showing1["datetime_start"]
+                        < showing2["datetime_end"]
+                    ):
+                        show_end_name = play_date2["name"]
+                        show_end_time = showing2["datetime_end"]
+                        show_start_name = play_date1["name"]
+                        show_start_time = showing1["datetime_start"]
                         if correct_endtimes:
-                            showing2['datetime_end'] = showing1['datetime_start'] - \
-                                    datetime.timedelta(minutes=1)
+                            showing2["datetime_end"] = showing1[
+                                "datetime_start"
+                            ] - datetime.timedelta(minutes=1)
 
                     if show_start_name:
                         show_end_time = show_end_time.astimezone(THEATER_TZ)
-                        show_end_time_str = show_end_time.strftime('%I:%M%p %Z')
+                        show_end_time_str = show_end_time.strftime("%I:%M%p %Z")
                         show_start_time = show_start_time.astimezone(THEATER_TZ)
-                        show_start_time_str = show_start_time.strftime('%I:%M%p %Z')
-                        show_date_str = MONTHS[show_start_time.month - 1] + \
-                                " %d"%show_start_time.day
+                        show_start_time_str = show_start_time.strftime("%I:%M%p %Z")
+                        show_date_str = (
+                            MONTHS[show_start_time.month - 1]
+                            + " %d" % show_start_time.day
+                        )
                         if correct_endtimes:
                             print("AUTOCORRECTING TO FIX:")
-                        print("%s, Movie time conflict between:"%show_date_str)
-                        print("    " + show_end_name + " (Ends at %s)"%show_end_time_str)
-                        print("    " + show_start_name + " (Starts at %s)"%show_start_time_str)
+                        print("%s, Movie time conflict between:" % show_date_str)
+                        print(
+                            "    " + show_end_name + " (Ends at %s)" % show_end_time_str
+                        )
+                        print(
+                            "    "
+                            + show_start_name
+                            + " (Starts at %s)" % show_start_time_str
+                        )
 
 
 def check_empty_schedule(play_dates):
@@ -743,9 +782,9 @@ def parse_html_calendar(html_file, verbose=False):
     cal_year_re = re.search(r"_(20\d\d)(\d{4})?($|\.)", str(Path(html_file).stem))
     if cal_year_re:
         calendar_year = int(cal_year_re.group(1))
-    print("Calendar Year: %d"%calendar_year)
+    print("Calendar Year: %d" % calendar_year)
 
-    with open(html_file, 'rb') as html_fh:
+    with open(html_file, "rb") as html_fh:
         html_bin = html_fh.read()
 
     # weird characters used in stanford movies:
@@ -756,22 +795,22 @@ def parse_html_calendar(html_file, verbose=False):
     #   sometimes <td> with no closing </td>
 
     # bare bones html parse, keeps all weirdness from stanfordtheatre html
-    #soup = BeautifulSoup(html_bin, 'html.parser')
+    # soup = BeautifulSoup(html_bin, 'html.parser')
 
     # html5lib parse outputs valid html from broken stanfordtheatre html!
     #   a little slower but worth it
-    soup = BeautifulSoup(html_bin, 'html5lib')
+    soup = BeautifulSoup(html_bin, "html5lib")
 
-    tables = soup.find_all('table')
+    tables = soup.find_all("table")
 
     assert len(tables) == 1
 
     # search only for td, because sometimes bad html has no <tr> start tag!
     #   (but html5lib should clean this up and add a <tr>)
     play_dates = []
-    for td in tables[0].find_all('td'):
+    for td in tables[0].find_all("td"):
         td_play_dates = parse_td(td, calendar_year, verbose=verbose)
-        #td_play_dates = parse_td(td, calendar_year, verbose=verbose)
+        # td_play_dates = parse_td(td, calendar_year, verbose=verbose)
 
         if td_play_dates is not None:
             play_dates.extend(td_play_dates)
@@ -783,18 +822,16 @@ def lastmod_datetime(last_mod_str):
     """Extract valid UTC datetime from Last-Modified str
     """
     last_mod_re = re.search(
-            r",\s*(\d+\s+\S+\s+\d+\s+\d+:\d+:\d+)\s*(\S+)",
-            last_mod_str
-            )
+        r",\s*(\d+\s+\S+\s+\d+\s+\d+:\d+:\d+)\s*(\S+)", last_mod_str
+    )
     if last_mod_re:
         last_mod_strp = last_mod_re.group(1)
         tz = last_mod_re.group(2)
 
         last_mod_tz = pytz.timezone(tz)
         last_mod_datetime = datetime.datetime.strptime(
-                last_mod_strp,
-                "%d %b %Y %H:%M:%S"
-                )
+            last_mod_strp, "%d %b %Y %H:%M:%S"
+        )
         last_mod_datetime = last_mod_tz.localize(last_mod_datetime)
         last_mod_datetime = last_mod_datetime.astimezone(pytz.utc)
     else:
@@ -808,37 +845,38 @@ def fetch_url(url, newer_than_date=None):
     """
     # Any user_agent string EXCEPT 'Python-urllib' will work! (even empty)
     # 'Python-urllib' in string yields a HTTP Error 403: Forbidden
-    user_agent = 'Mozilla/5.0'
-    headers = {'User-Agent':user_agent}
+    user_agent = "Mozilla/5.0"
+    headers = {"User-Agent": user_agent}
     request = urllib.request.Request(url, headers=headers)
     html = None
     info = None
     try:
         response = urllib.request.urlopen(request)
     except urllib.error.URLError as err:
-        if hasattr(err, 'code'):
+        if hasattr(err, "code"):
             print(err.code)
         else:
             print(err.reason)
     else:
         info = response.info()
         if newer_than_date is not None:
-            if info.get('Last-Modified', None):
-                last_mod_datetime = lastmod_datetime(info['Last-Modified'])
+            if info.get("Last-Modified", None):
+                last_mod_datetime = lastmod_datetime(info["Last-Modified"])
             else:
                 last_mod_datetime = None
 
             newer_than = datetime.datetime.combine(
-                    newer_than_date,
-                    datetime.time(0, 0, 1)
-                    )
+                newer_than_date, datetime.time(0, 0, 1)
+            )
             tz_local = get_localzone()
             newer_than = tz_local.localize(newer_than)
             newer_than = newer_than.astimezone(pytz.utc)
 
             # fetch from web if no valid last_mod_datetime or
             #   last modified is after the newer_than date
-            fetch_from_web = (last_mod_datetime is None) or last_mod_datetime > newer_than
+            fetch_from_web = (
+                last_mod_datetime is None
+            ) or last_mod_datetime > newer_than
         else:
             # always fetch from web if newer_than_date is None
             fetch_from_web = True
@@ -852,23 +890,23 @@ def fetch_url(url, newer_than_date=None):
 
 
 def make_cache_filename(filepath, filedate=datetime.date.today()):
-    out_filename = "%s_%04d%02d%02d%s"%(
-            str(Path(filepath).stem),
-            filedate.year,
-            filedate.month,
-            filedate.day,
-            str(Path(filepath).suffix)
-            )
+    out_filename = "%s_%04d%02d%02d%s" % (
+        str(Path(filepath).stem),
+        filedate.year,
+        filedate.month,
+        filedate.day,
+        str(Path(filepath).suffix),
+    )
     return THEATER_CACHE_DIR / out_filename
 
 
 def find_last_cachefile(filepath):
     matched_files = THEATER_CACHE_DIR.glob(
-            "".join((Path(filepath).stem, "_*", Path(filepath).suffix))
-            )
+        "".join((Path(filepath).stem, "_*", Path(filepath).suffix))
+    )
 
     matched_files = list(matched_files)
-    #matched_files = [str(x) for x in matched_files]
+    # matched_files = [str(x) for x in matched_files]
     matched_files.sort()
 
     if matched_files:
@@ -889,10 +927,8 @@ def find_last_cachefile_date(filepath):
         date_re = re.search(r"_(\d{4})(\d{2})(\d{2})", last_cache_file.stem)
         if date_re:
             cache_date = datetime.date(
-                    int(date_re.group(1)),
-                    int(date_re.group(2)),
-                    int(date_re.group(3))
-                    )
+                int(date_re.group(1)), int(date_re.group(2)), int(date_re.group(3))
+            )
 
     return cache_date
 
@@ -909,14 +945,14 @@ def fetch_schedule_htmls():
 
     mainpage_html = fetch_url(THEATER_BASEURL)
 
-    soup = BeautifulSoup(mainpage_html, 'html5lib')
+    soup = BeautifulSoup(mainpage_html, "html5lib")
 
-    links = soup.find_all('a')
-    links = [x.get('href') for x in links]
-    cal_links = [x for x in links if x.startswith('calendars')]
+    links = soup.find_all("a")
+    links = [x.get("href") for x in links]
+    cal_links = [x for x in links if x.startswith("calendars")]
     cal_links = list(set(cal_links))
-    if 'calendars/index.html' in cal_links:
-        cal_links.remove('calendars/index.html')
+    if "calendars/index.html" in cal_links:
+        cal_links.remove("calendars/index.html")
     cal_links = [urllib.parse.quote(x) for x in cal_links]
 
     fetched_files = []
@@ -924,15 +960,12 @@ def fetch_schedule_htmls():
 
         cache_date = find_last_cachefile_date(Path(cal_link).name)
 
-        this_html = fetch_url(
-                THEATER_BASEURL + cal_link,
-                newer_than_date=cache_date
-                )
+        this_html = fetch_url(THEATER_BASEURL + cal_link, newer_than_date=cache_date)
 
         if this_html:
             cache_filename = make_cache_filename(Path(cal_link).name)
 
-            with open(cache_filename, 'wb') as cache_fh:
+            with open(cache_filename, "wb") as cache_fh:
                 cache_fh.write(this_html)
 
             fetched_files.append(cache_filename)
@@ -943,18 +976,18 @@ def fetch_schedule_htmls():
                 fetched_files.append(cache_filename)
 
     # inform user on links and new/modified calendars
-    print("%d calendar link%s found on %s"%(
-        len(cal_links),
-        's' if len(cal_links) > 1 else '',
-        THEATER_BASEURL
+    print(
+        "%d calendar link%s found on %s"
+        % (len(cal_links), "s" if len(cal_links) > 1 else "", THEATER_BASEURL)
+    )
+    print(
+        "%d calendar%s that %s new or modified"
+        % (
+            new_or_modified,
+            "s" if new_or_modified != 1 else "",
+            "are" if new_or_modified != 1 else "is",
         )
-        )
-    print("%d calendar%s that %s new or modified"%(
-        new_or_modified,
-        's' if new_or_modified != 1 else '',
-        'are' if new_or_modified != 1 else 'is',
-        )
-        )
+    )
 
     return fetched_files
 
@@ -966,22 +999,25 @@ def main(argv=None):
     IMDB_CACHE_DIR.mkdir(exist_ok=True)
     THEATER_CACHE_DIR.mkdir(exist_ok=True)
 
-    print("-"*78)
+    print("-" * 78)
     print("Started at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"))
-    print("-"*78, file=sys.stderr)
-    print("Started at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"), file=sys.stderr)
+    print("-" * 78, file=sys.stderr)
+    print(
+        "Started at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"),
+        file=sys.stderr,
+    )
     if args.file:
         srcfiles = [Path(x) for x in args.srcfile]
     else:
         srcfiles = fetch_schedule_htmls()
 
     for srcfile in srcfiles:
-        print("-"*30)
+        print("-" * 30)
         print(srcfile.name)
-        print("-"*30, file=sys.stderr)
+        print("-" * 30, file=sys.stderr)
         print(srcfile.name, file=sys.stderr)
 
-        ics_filename = ICAL_OUT_DIR / (srcfile.stem + '.ics')
+        ics_filename = ICAL_OUT_DIR / (srcfile.stem + ".ics")
 
         # parse html file, extract showtime info
         play_dates = parse_html_calendar(srcfile, args.verbose)
@@ -996,7 +1032,7 @@ def main(argv=None):
         check_for_problems(play_dates, correct_endtimes=args.correct_times)
 
         # (debug) text report of play_dates
-        #report_playdates(play_dates)
+        # report_playdates(play_dates)
 
         # write ical if we have any valid playdates
         if play_dates:
@@ -1004,7 +1040,10 @@ def main(argv=None):
 
         # print "finished" at date/time message
         print("Finished at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"))
-        print("Finished at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"), file=sys.stderr)
+        print(
+            "Finished at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"),
+            file=sys.stderr,
+        )
 
     return 0
 
