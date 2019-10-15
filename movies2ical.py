@@ -149,6 +149,10 @@ def parse_datestr(content_str, calendar_year):
     #   July 18-19
     #   August 31-September 1
     #   December 24
+    #   August 31-Sept 3
+
+    # TODO: somebody occasionally uses month abbreviations, need to parse
+    #   in month_regexp
     month_regexp = "(" + "|".join(MONTHS) + ")"
     onemonth_multdate_re = re.search(
             month_regexp + r"\s+(\d+)\s*-\s*(\d+)($|\D)",
