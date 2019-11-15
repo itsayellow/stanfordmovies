@@ -1,0 +1,4 @@
+# Information for movies2ical
+
+[notify17]
+template_url = "https://hook.notify17.net/api/template/<your-template-specifier>"
