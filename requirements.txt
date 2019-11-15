@@ -7,4 +7,6 @@ icalendar
 html5lib
 imdbpy>=6.5
 pytz
+requests
+toml
 tzlocal

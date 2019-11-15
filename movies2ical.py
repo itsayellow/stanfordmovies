@@ -19,6 +19,8 @@ from bs4 import BeautifulSoup, Tag
 from icalendar import Calendar, Event
 from imdb import IMDb
 import pytz
+import requests
+import toml
 from tzlocal import get_localzone
 
 
@@ -108,6 +110,12 @@ def process_command_line(argv):
     )
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="More verbose messages."
+    )
+    parser.add_argument(
+        "-n",
+        "--notify",
+        action="store_true",
+        help="Use Notify17 to send notifications on success or failure.",
     )
 
     args = parser.parse_args(argv)
@@ -938,8 +946,8 @@ def fetch_schedule_htmls():
     Get latest versions of available theater calendar pages, and if they
     are newer than previous versions, deposit them in THEATER_CACHE_DIR
 
-    Returns (list): of the latest versions of calendar html files, either
-        from web (if newer than cache) or from cache (if web is not newer)
+    Returns (list): only new versions of calendar html files, either
+        from web (if newer than cache) or from cache (if newer than web)
     """
     new_or_modified = 0
 
@@ -992,6 +1000,14 @@ def fetch_schedule_htmls():
     return fetched_files
 
 
+def send_notify17(notify17_url, calendar_name, calendars_list):
+    data = {"calendar_name": calendar_name, "calendar_list": calendars_list}
+    r = requests.post(url=notify17_url, data=data)
+
+    # print reply
+    print(r.text)
+
+
 def main(argv=None):
     args = process_command_line(argv)
 
@@ -1011,6 +1027,7 @@ def main(argv=None):
     else:
         srcfiles = fetch_schedule_htmls()
 
+    new_icals = []
     for srcfile in srcfiles:
         print("-" * 30)
         print(srcfile.name)
@@ -1037,6 +1054,7 @@ def main(argv=None):
         # write ical if we have any valid playdates
         if play_dates:
             gen_ical(play_dates, ical_filename=ics_filename)
+            new_icals.append(ics_filename)
 
         # print "finished" at date/time message
         print("Finished at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"))
@@ -1044,6 +1062,9 @@ def main(argv=None):
             "Finished at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"),
             file=sys.stderr,
         )
+    if new_icals and args.notify:
+        toml_data = toml.load(Path("./movies.toml"))
+        send_notify17(toml_data["notify17"]["template_url"], new_ical[0], new_icals)
 
     return 0
 
