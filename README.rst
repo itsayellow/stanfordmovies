@@ -8,7 +8,7 @@ Installation
 
 ::
 
-    pipx install --spec https://github.com/itsayellow/movies2ical movies2ical
+    pipx install --spec git+https://github.com/itsayellow/stanfordmovies movies2ical
 
 Periodically running in the background on macOS
 -----------------------------------------------
