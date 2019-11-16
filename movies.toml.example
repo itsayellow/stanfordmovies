@@ -1,4 +1,5 @@
 # Information for movies2ical
 
 [notify17]
-template_url = "https://hook.notify17.net/api/template/<your-template-specifier>"
+new_calendar_url = "https://hook.notify17.net/api/template/<your-template-specifier>"
+error_url = "https://hook.notify17.net/api/template/<your-template-specifier>"

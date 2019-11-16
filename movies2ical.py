@@ -963,7 +963,8 @@ def fetch_schedule_htmls():
         cal_links.remove("calendars/index.html")
     cal_links = [urllib.parse.quote(x) for x in cal_links]
 
-    fetched_files = []
+    new_files = []
+    old_files = []
     for cal_link in cal_links:
 
         cache_date = find_last_cachefile_date(Path(cal_link).name)
@@ -976,12 +977,12 @@ def fetch_schedule_htmls():
             with open(cache_filename, "wb") as cache_fh:
                 cache_fh.write(this_html)
 
-            fetched_files.append(cache_filename)
+            new_files.append(cache_filename)
             new_or_modified += 1
         else:
             cache_filename = find_last_cachefile(Path(cal_link).name)
             if cache_filename:
-                fetched_files.append(cache_filename)
+                old_files.append(cache_filename)
 
     # inform user on links and new/modified calendars
     print(
@@ -997,15 +998,13 @@ def fetch_schedule_htmls():
         )
     )
 
-    return fetched_files
+    return (new_files, old_files)
 
 
-def send_notify17(notify17_url, calendar_name, calendars_list):
-    data = {"calendar_name": calendar_name, "calendar_list": calendars_list}
+def send_notify17(notify17_url, data):
     r = requests.post(url=notify17_url, data=data)
-
     # print reply
-    print(r.text)
+    print(r.text, file=sys.stderr)
 
 
 def main(argv=None):
@@ -1025,10 +1024,10 @@ def main(argv=None):
     if args.file:
         srcfiles = [Path(x) for x in args.srcfile]
     else:
-        srcfiles = fetch_schedule_htmls()
+        (new_srcfiles, old_srcfiles) = fetch_schedule_htmls()
 
     new_icals = []
-    for srcfile in srcfiles:
+    for srcfile in new_srcfiles + old_srcfiles:
         print("-" * 30)
         print(srcfile.name)
         print("-" * 30, file=sys.stderr)
@@ -1054,7 +1053,8 @@ def main(argv=None):
         # write ical if we have any valid playdates
         if play_dates:
             gen_ical(play_dates, ical_filename=ics_filename)
-            new_icals.append(ics_filename)
+            if srcfile in new_srcfiles:
+                new_icals.append(ics_filename)
 
         # print "finished" at date/time message
         print("Finished at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"))
@@ -1064,7 +1064,10 @@ def main(argv=None):
         )
     if new_icals and args.notify:
         toml_data = toml.load(Path("./movies.toml"))
-        send_notify17(toml_data["notify17"]["template_url"], new_ical[0], new_icals)
+        send_notify17(
+            notify17_url=toml_data["notify17"]["new_calendar_url"],
+            data={"calendar_name": new_icals[0], "calendar_list": new_icals},
+        )
 
     return 0
 
@@ -1076,5 +1079,9 @@ if __name__ == "__main__":
         print("Stopped by Keyboard Interrupt", file=sys.stderr)
         # exit error code for Ctrl-C
         status = 130
+    except Exception as e:
+        send_notify17(
+            notify17_url=toml_data["notify17"]["error_url"], data={"error_text": str(e)}
+        )
 
     sys.exit(status)
