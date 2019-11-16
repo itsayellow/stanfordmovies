@@ -1,14 +1,14 @@
 movies2ical
 ===========
 
+Utility to read current HTML calendar from stanfordtheatre.org and output ical file.
+
 Installation
 ------------
 
 ::
 
     pipx install --spec https://github.com/itsayellow/movies2ical movies2ical
-
-Utility to read current HTML calendar from stanfordtheatre.org and output ical file.
 
 Periodically running in the background on macOS
 -----------------------------------------------
