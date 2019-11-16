@@ -18,11 +18,10 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python :: 3",
     ],
-    keywords="report",
+    #keywords="report",
     url="https://github.com/itsayellow/stanfordmovies",
     # include_package_data=True,  # so we get html files in datadiary/templates
-    #packages=["stanfordmovies"],
-    py_modules=["stanfordmovies"],
+    py_modules=["movies2ical"],
     install_requires=[
         "bleach",
         "beautifulsoup4",
@@ -35,5 +34,5 @@ setup(
         "tzlocal",
     ],
     entry_points={"console_scripts": ["movies2ical=movies2ical:cli"]},
-    python_requires=">=3",
+    python_requires=">=3.3",
 )
