@@ -26,52 +26,20 @@ import requests
 import toml
 from tzlocal import get_localzone
 
-
-# Stanford Theatre base url
-THEATER_BASEURL = r"http://www.stanfordtheatre.org/"
-
-# How many characters to limit plot descriptions to in entries
-MAX_PLOT_LEN = 800
-
-# Stanford Theatre is in the same timezone as Los Angeles
-THEATER_TZ = pytz.timezone("America/Los_Angeles")
-
-# where the configuration file is
-CONFIG_DIR = Path.home() / ".config" / "movies2ical"
-CONFIG_FILE = CONFIG_DIR / "config.toml"
-
-# where to store cached imdb json files and stanford movie html files
-CACHE_ROOT_DIR = Path.home() / ".cache" / "movies2ical"
-
-# where to store cached json files for imdb movie data we fetch
-IMDB_CACHE_DIR = CACHE_ROOT_DIR / "imdb_cache"
-
-# where to put output .ics files
-ICAL_OUT_DIR = Path(".")
-
-# where to store cached stanford theater htmls files
-THEATER_CACHE_DIR = CACHE_ROOT_DIR / "stanford_movie_cache"
-
-# months in order to convert to/from numbers
-MONTHS = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-]
-MONTHS.extend(
-    ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+#from movies2ical.constants import (
+from .constants import (
+    THEATER_BASEURL,
+    MAX_PLOT_LEN,
+    THEATER_TZ,
+    CONFIG_DIR,
+    CONFIG_FILE,
+    CACHE_ROOT_DIR,
+    IMDB_CACHE_DIR,
+    ICAL_OUT_DIR,
+    THEATER_CACHE_DIR,
+    MONTHS,
+    IS_TTY,
 )
-
-IS_TTY = sys.stdout.isatty()
 
 
 def process_command_line(argv):
@@ -981,22 +949,10 @@ def generate_plist_file(config_info):
         "StandardOutPath": "/INSERT/FULL/PATH/TO/stanford_out.txt",
         "StandardErrorPath": "/INSERT/FULL/PATH/TO/stanford_err.txt",
         "StartCalendarInterval": [
-            {
-                "Hour": 3,
-                "Minute": 0,
-                "Weekday": 0,
-            },
-            {
-                "Hour": 3,
-                "Minute": 0,
-                "Weekday": 2,
-            },
-            {
-                "Hour": 3,
-                "Minute": 0,
-                "Weekday": 4,
-            },
-        ]
+            {"Hour": 3, "Minute": 0, "Weekday": 0},
+            {"Hour": 3, "Minute": 0, "Weekday": 2},
+            {"Hour": 3, "Minute": 0, "Weekday": 4},
+        ],
     }
     plist_info.update(config_info["plist"])
     with open("local.CheckStanfordMovies.plist", "wb") as plist_fh:
