@@ -8,7 +8,7 @@
         <array>
             <string>/usr/local/bin/python3</string>
             <string>/INSERT/FULL/PATH/TO/movies2ical.py</string>
-            <string>-c</string>
+            <string>--correct_times</string>
         </array>
         <key>WorkingDirectory</key>
         <string>/INSERT/FULL/PATH/TO/Stanford Theatre Calendars/</string>
