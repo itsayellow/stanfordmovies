@@ -1013,9 +1013,9 @@ def send_notify17(notify17_url, data):
 
 def setup_app_directories():
     # make sure cache dirs exist
-    IMDB_CACHE_DIR.mkdir(exist_ok=True)
-    THEATER_CACHE_DIR.mkdir(exist_ok=True)
-    CONFIG_DIR.mkdir(exist_ok=True)
+    IMDB_CACHE_DIR.mkdir(exist_ok=True, parents=True)
+    THEATER_CACHE_DIR.mkdir(exist_ok=True, parents=True)
+    CONFIG_DIR.mkdir(exist_ok=True, parents=True)
 
     config_toml_example_path = CONFIG_DIR / "config.toml.example"
     config_toml_example_str = """
