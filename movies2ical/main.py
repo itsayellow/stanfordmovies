@@ -24,7 +24,7 @@ from .constants import (
     DEFAULT_PLIST_INFO,
     DEFAULT_CONFIG_TOML_STR,
 )
-from .parse_html import parse_html_calendar, compute_datetimes
+from .parse_calendar import parse_html_calendar, compute_datetimes
 from .schedule_acquire import fetch_schedule_htmls
 from .verify import check_for_problems
 from .imdb import get_imdb_info

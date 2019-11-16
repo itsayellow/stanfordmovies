@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="movies2ical",
-    version="0.2",
+    version="0.3.0",
     description="Generate ical files from Stanford Movie Theater calendar webpage.",
     author="Matthew A. Clapp",
     author_email="itsayellow+dev@gmail.com",
