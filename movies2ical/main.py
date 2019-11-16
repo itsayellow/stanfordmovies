@@ -25,7 +25,6 @@ from .constants import (
     THEATER_TZ,
     CONFIG_DIR,
     CONFIG_FILE,
-    CACHE_ROOT_DIR,
     IMDB_CACHE_DIR,
     ICAL_OUT_DIR,
     THEATER_CACHE_DIR,
@@ -133,7 +132,7 @@ def fetch_imdb_info_cache(imdb_movie_num, movie_name):
         try:
             with open(imdb_cache_filename, "w") as imdb_cache_fh:
                 json.dump(imdb_movie, imdb_cache_fh)
-        except (IsADirectoryError, PermissionError) as err:
+        except (IsADirectoryError, PermissionError):
             print("Can't write to imdb_cache dir")
     except Exception as err:
         print("Can't load: " + imdb_cache_filename)
@@ -512,7 +511,8 @@ def main(config_info, argv=None):
         file=sys.stderr,
     )
     if args.file:
-        srcfiles = [Path(x) for x in args.srcfile]
+        new_srcfiles = [Path(x) for x in args.srcfile]
+        old_srcfiles = []
     else:
         (new_srcfiles, old_srcfiles) = fetch_schedule_htmls()
 
