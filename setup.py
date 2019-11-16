@@ -33,6 +33,6 @@ setup(
         "toml",
         "tzlocal",
     ],
-    entry_points={"console_scripts": ["movies2ical=movies2ical.movies2ical:cli"]},
+    entry_points={"console_scripts": ["movies2ical=movies2ical.main:cli"]},
     python_requires=">=3.3",
 )
