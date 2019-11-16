@@ -1137,9 +1137,9 @@ def cli():
         status = 130
     except Exception as e:
         print(str(e))
-        if "error_url" in toml_data["notify17"]:
+        if "error_url" in config_info["notify17"]:
             send_notify17(
-                notify17_url=toml_data["notify17"]["error_url"],
+                notify17_url=config_info["notify17"]["error_url"],
                 data={"error_text": str(e)},
             )
 
