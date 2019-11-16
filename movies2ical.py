@@ -33,8 +33,12 @@ MAX_PLOT_LEN = 800
 # Stanford Theatre is in the same timezone as Los Angeles
 THEATER_TZ = pytz.timezone("America/Los_Angeles")
 
+# where the configuration file is
+CONFIG_DIR = Path.home() / ".config" / "movies2ical"
+CONFIG_FILE = CONFIG_DIR / "config.toml"
+
 # where to store cached imdb json files and stanford movie html files
-CACHE_ROOT_DIR = Path(sys.argv[0]).absolute().parent
+CACHE_ROOT_DIR = Path.home() / ".cache" / "movies2ical"
 
 # where to store cached json files for imdb movie data we fetch
 IMDB_CACHE_DIR = CACHE_ROOT_DIR / "imdb_cache"
@@ -1007,12 +1011,64 @@ def send_notify17(notify17_url, data):
     print(r.text, file=sys.stderr)
 
 
-def main(argv=None):
-    args = process_command_line(argv)
-
+def setup_app_directories():
     # make sure cache dirs exist
     IMDB_CACHE_DIR.mkdir(exist_ok=True)
     THEATER_CACHE_DIR.mkdir(exist_ok=True)
+    CONFIG_DIR.mkdir(exist_ok=True)
+
+    config_toml_example_path = CONFIG_DIR / "config.toml.example"
+    config_toml_example_str = """
+    # Information for movies2ical
+
+    [notify17]
+        new_calendar_url = "https://hook.notify17.net/api/template/<your-template-specifier>"
+        error_url = "https://hook.notify17.net/api/template/<your-template-specifier>"
+
+    [plist]
+        ProgramArguments = [
+            "/path/to/python3",
+            "/path/to/movies2ical.py",
+            "--correct_times",
+            "--notify"
+        ]
+        WorkingDirectory = "/directory/to/output/calendars/"
+        StandardOutPath = "/path/to/stanford_out.txt"
+        StandardErrorPath = "/path/to/stanford_err.txt"
+        # new [[plist.StartCalendarInterval]] for each new date/time to run command
+        [[plist.StartCalendarInterval]]
+        # Sunday 3:00am
+        Hour = 3
+        Minute = 0
+        Weekday = 0
+        [[plist.StartCalendarInterval]]
+        # Tuesday 3:00am
+        Hour = 3
+        Minute = 0
+        Weekday = 2
+        [[plist.StartCalendarInterval]]
+        # Thursday 3:00am
+        Hour = 3
+        Minute = 0
+        Weekday = 4
+    """
+    with config_toml_example_path.open("w") as config_toml_example_fh:
+        config_toml_example_fh.write(config_toml_example_str)
+
+
+def get_config_info():
+    try:
+        config_info = toml.load(CONFIG_FILE)
+    except IOError:
+        config_info = {"plist": {}, "notify17": {}}
+
+    return config_info
+
+
+def main(config_info, argv=None):
+    args = process_command_line(argv)
+
+    setup_app_directories()
 
     print("-" * 78)
     print("Started at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"))
@@ -1062,10 +1118,9 @@ def main(argv=None):
             "Finished at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"),
             file=sys.stderr,
         )
-    if new_icals and args.notify:
-        toml_data = toml.load(Path("./movies.toml"))
+    if new_icals and args.notify and "new_calendar_url" in config_info["notify17"]:
         send_notify17(
-            notify17_url=toml_data["notify17"]["new_calendar_url"],
+            notify17_url=config_info["notify17"]["new_calendar_url"],
             data={"calendar_name": new_icals[0], "calendar_list": new_icals},
         )
 
@@ -1074,7 +1129,8 @@ def main(argv=None):
 
 def cli():
     try:
-        status = main(sys.argv)
+        config_info = get_config_info()
+        status = main(config_info, sys.argv)
     except KeyboardInterrupt:
         print("Stopped by Keyboard Interrupt", file=sys.stderr)
         # exit error code for Ctrl-C
