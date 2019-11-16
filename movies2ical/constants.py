@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+import textwrap
 
 import pytz
 
@@ -48,3 +49,57 @@ MONTHS.extend(
 )
 
 IS_TTY = sys.stdout.isatty()
+
+DEFAULT_PLIST_INFO = {
+    "Label": "local.CheckStanfordMovies",
+    "ProgramArguments": [
+        "/usr/local/bin/python3",
+        "/INSERT/FULL/PATH/TO/movies2ical.py",
+        "--correct_times",
+    ],
+    "WorkingDirectory": "/INSERT/FULL/PATH/TO/Stanford Theatre Calendars/",
+    "StandardOutPath": "/INSERT/FULL/PATH/TO/stanford_out.txt",
+    "StandardErrorPath": "/INSERT/FULL/PATH/TO/stanford_err.txt",
+    "StartCalendarInterval": [
+        {"Hour": 3, "Minute": 0, "Weekday": 0},
+        {"Hour": 3, "Minute": 0, "Weekday": 2},
+        {"Hour": 3, "Minute": 0, "Weekday": 4},
+    ],
+}
+
+DEFAULT_CONFIG_TOML_STR = textwrap.dedent(
+    """
+    # Information for movies2ical
+
+    [notify17]
+        new_calendar_url = "https://hook.notify17.net/api/template/<your-template-specifier>"
+        error_url = "https://hook.notify17.net/api/template/<your-template-specifier>"
+
+    [plist]
+        ProgramArguments = [
+            "/path/to/python3",
+            "/path/to/movies2ical.py",
+            "--correct_times",
+            "--notify"
+        ]
+        WorkingDirectory = "/directory/to/output/calendars/"
+        StandardOutPath = "/path/to/stanford_out.txt"
+        StandardErrorPath = "/path/to/stanford_err.txt"
+        # new [[plist.StartCalendarInterval]] for each new date/time to run command
+        [[plist.StartCalendarInterval]]
+        # Sunday 3:00am
+        Hour = 3
+        Minute = 0
+        Weekday = 0
+        [[plist.StartCalendarInterval]]
+        # Tuesday 3:00am
+        Hour = 3
+        Minute = 0
+        Weekday = 2
+        [[plist.StartCalendarInterval]]
+        # Thursday 3:00am
+        Hour = 3
+        Minute = 0
+        Weekday = 4
+    """
+).strip()
