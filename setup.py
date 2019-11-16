@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="movies2ical",
-    version="0.1",
+    version="0.2",
     description="Generate ical files from Stanford Movie Theater calendar webpage.",
     author="Matthew A. Clapp",
     author_email="itsayellow+dev@gmail.com",
@@ -21,7 +21,7 @@ setup(
     #keywords="report",
     url="https://github.com/itsayellow/stanfordmovies",
     # include_package_data=True,  # so we get html files in datadiary/templates
-    py_modules=["movies2ical"],
+    packages=["movies2ical"],
     install_requires=[
         "bleach",
         "beautifulsoup4",
@@ -33,6 +33,6 @@ setup(
         "toml",
         "tzlocal",
     ],
-    entry_points={"console_scripts": ["movies2ical=movies2ical:cli"]},
+    entry_points={"console_scripts": ["movies2ical=movies2ical.movies2ical:cli"]},
     python_requires=">=3.3",
 )
