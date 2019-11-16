@@ -1136,9 +1136,12 @@ def cli():
         # exit error code for Ctrl-C
         status = 130
     except Exception as e:
-        send_notify17(
-            notify17_url=toml_data["notify17"]["error_url"], data={"error_text": str(e)}
-        )
+        print(str(e))
+        if "error_url" in toml_data["notify17"]:
+            send_notify17(
+                notify17_url=toml_data["notify17"]["error_url"],
+                data={"error_text": str(e)},
+            )
 
     sys.exit(status)
 
