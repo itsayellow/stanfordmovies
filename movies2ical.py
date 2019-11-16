@@ -315,112 +315,6 @@ def parse_td(td, calendar_year, verbose=False):
         return None
 
 
-# def parse_td(td, calendar_year, verbose=False):
-#    td_str = str(td)
-#    td_startdate = None
-#    td_enddate = None
-#    movies = []
-#
-#    # this should work, but sometimes a class='playdate' has garbage
-#    #if "playdate" in td['class']:
-#
-#    # seems every valid movie td has "imdb" inside of it
-#    if "imdb" in td_str:
-#        # Weird Stuff That Can Happen
-#        #   <a href="..">movie_name</a> (year) instead of
-#        #       <a href="..">movie_name (year)</a>
-#        #   time can be in the next <p>
-#        #   "movie_name (UK version 1940)" instead of
-#        #       "movie_name (1940)"
-#        #   "movie_name (<em>alt movie name</em>, 1940)" instead of
-#        #       "movie_name (1940)"
-#        for para in td.find_all("p"):
-#            movie_name = None
-#            imdb_link = None
-#            movie_time = None
-#            found_lone_year = False
-#
-#            for content in para.contents:
-#                if isinstance(content, Tag) and content.name == 'a':
-#                    # link (presumably to imdb for movie) and movie
-#                    imdb_link = content['href']
-#                    movie_name = content.get_text()
-#                    if not re.search(r"\(\D*\d{4}\)", movie_name):
-#                        # search the rest of the paragraph for a year
-#                        year_re = re.search(r"\(\D*\d{4}\)", para.get_text())
-#                        if year_re:
-#                            movie_name = movie_name + " " + year_re.group(0)
-#                            found_lone_year = True
-#
-#                elif isinstance(content, str) and re.search(r"\d:\d\d", content):
-#                    # movie times
-#                    movie_time = str(content).strip()
-#
-#                elif isinstance(content, str) and td_startdate is None:
-#                    # movie dates (possibly)
-#                    # Searching for one of:
-#                    #   July 18-19
-#                    #   August 31-September 1
-#                    #   December 24
-#                    (td_startdate, td_enddate) = parse_datestr(content, calendar_year)
-#                elif isinstance(content, Tag) and content.name == 'br':
-#                    # ignore line break tags </br>
-#                    pass
-#
-#                elif isinstance(content, str) and re.search(r"^\s*$", content):
-#                    # ignore whitespace or empty string
-#                    pass
-#
-#                elif found_lone_year and re.search(r"^\s*\(\D*\d{4}\D*\)\s*$", content):
-#                    # ignore year in parens in content if we had to find it
-#                    #   before for previous movie content
-#                    pass
-#
-#                else:
-#                    # unknown (usually random chatter)
-#                    if verbose:
-#                        print("Unparsed string:\n    '" + str(content) + "'")
-#
-#            if imdb_link is not None:
-#                # we got a movie in this para, so add movie to list
-#                if movie_time is None:
-#                    # check to see if time is in next paragraph(s)
-#                    for sib in para.next_siblings:
-#                        if isinstance(sib, Tag) and sib.name == 'p':
-#                            if sib.find_all('a'):
-#                                # next movie, so stop looking for time for this
-#                                #   movie's times
-#                                break
-#                            sib_text = sib.get_text()
-#                            if re.search(r"\d:\d\d", sib_text):
-#                                movie_time = sib_text.strip()
-#                                break
-#
-#                if movie_time is not None:
-#                    # clean up movie times
-#                    movie_times = process_movie_time_str(movie_time)
-#
-#                    # append to movies for this date
-#                    movies.append((movie_name, imdb_link, movie_times))
-#
-#    if td_startdate is not None:
-#        movie_return = []
-#        for movie in movies:
-#            (movie_name, imdb_link, movie_times) = movie
-#            movie_return.append(
-#                    {
-#                        'name':movie_name.strip(),
-#                        'imdb_url':imdb_link,
-#                        'show_startdate':td_startdate,
-#                        'show_enddate':td_enddate,
-#                        'show_times':movie_times,
-#                        }
-#                    )
-#        return movie_return
-#    else:
-#        return None
-
-
 def fetch_imdb_info_cache(imdb_movie_num, movie_name):
     imdb_cache_filename = str(IMDB_CACHE_DIR / imdb_movie_num) + ".json"
 
@@ -823,7 +717,6 @@ def parse_html_calendar(html_file, verbose=False):
     play_dates = []
     for td in tables[0].find_all("td"):
         td_play_dates = parse_td(td, calendar_year, verbose=verbose)
-        # td_play_dates = parse_td(td, calendar_year, verbose=verbose)
 
         if td_play_dates is not None:
             play_dates.extend(td_play_dates)
