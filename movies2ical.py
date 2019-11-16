@@ -10,7 +10,9 @@ import argparse
 import datetime
 import json
 from pathlib import Path
+import plistlib
 import textwrap
+import traceback
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -121,6 +123,11 @@ def process_command_line(argv):
         "--notify",
         action="store_true",
         help="Use Notify17 to send notifications on success or failure.",
+    )
+    parser.add_argument(
+        "--plist",
+        action="store_true",
+        help="Do nothing but output a macOS plist file to the current directory suitable for inclusion in LaunchAgents.",
     )
 
     args = parser.parse_args(argv)
@@ -961,10 +968,47 @@ def get_config_info():
     return config_info
 
 
+def generate_plist_file(config_info):
+    # default info
+    plist_info = {
+        "Label": "local.CheckStanfordMovies",
+        "ProgramArguments": [
+            "/usr/local/bin/python3",
+            "/INSERT/FULL/PATH/TO/movies2ical.py",
+            "--correct_times",
+        ],
+        "WorkingDirectory": "/INSERT/FULL/PATH/TO/Stanford Theatre Calendars/",
+        "StandardOutPath": "/INSERT/FULL/PATH/TO/stanford_out.txt",
+        "StandardErrorPath": "/INSERT/FULL/PATH/TO/stanford_err.txt",
+        "StartCalendarInterval": [
+            {
+                "Hour": 3,
+                "Minute": 0,
+                "Weekday": 0,
+            },
+            {
+                "Hour": 3,
+                "Minute": 0,
+                "Weekday": 2,
+            },
+            {
+                "Hour": 3,
+                "Minute": 0,
+                "Weekday": 4,
+            },
+        ]
+    }
+    plist_info.update(config_info["plist"])
+    with open("local.CheckStanfordMovies.plist", "wb") as plist_fh:
+        plistlib.dump(plist_info, plist_fh)
+
+
 def main(config_info, argv=None):
     args = process_command_line(argv)
 
-    setup_app_directories()
+    if args.plist:
+        generate_plist_file(config_info)
+        return 0
 
     print("-" * 78)
     print("Started at " + datetime.datetime.today().strftime("%I:%M%p %B %d, %Y"))
@@ -1025,6 +1069,7 @@ def main(config_info, argv=None):
 
 def cli():
     try:
+        setup_app_directories()
         config_info = get_config_info()
         status = main(config_info, sys.argv)
     except KeyboardInterrupt:
@@ -1032,12 +1077,13 @@ def cli():
         # exit error code for Ctrl-C
         status = 130
     except Exception as e:
-        print(str(e))
+        traceback.print_exc()
         if "error_url" in config_info["notify17"]:
             send_notify17(
                 notify17_url=config_info["notify17"]["error_url"],
                 data={"error_text": str(e)},
             )
+        status = 1
 
     sys.exit(status)
 
