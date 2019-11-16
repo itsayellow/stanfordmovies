@@ -5,8 +5,9 @@ import sys
 
 from bs4 import BeautifulSoup
 import bleach
+import pytz
 
-from .constants import MONTHS
+from .constants import MONTHS, THEATER_TZ
 
 
 def parse_html_calendar(html_file, verbose=False):
@@ -238,3 +239,77 @@ def process_movie_time_str(movie_time):
         movie_times.append(time_extra)
 
     return movie_times
+
+
+def compute_datetimes(play_dates):
+    for play_date in play_dates:
+        # TODO: check for other runtimes instead of just using first one
+        runtime = int(play_date["imdb_info"]["runtimes"][0])
+        play_date_start = datetime.date(*play_date["show_startdate"])
+        play_date_end = datetime.date(*play_date["show_enddate"])
+
+        play_date["showings"] = []
+
+        for show_time in play_date["show_times"]:
+            if " " not in show_time:
+                # normal showtime every day in range
+                this_time = show_time
+                this_play_date_start = play_date_start
+                this_play_date_end = play_date_end
+            else:
+                # showtimes only on saturday and/or sunday
+
+                # get weekday (e.g. Monday, Tuesday, etc.) number of
+                #   play_date_start.  Monday=0, Tuesday=1, etc.
+                weekday_start = play_date_start.weekday()
+
+                # figure out play_date start and end based on sat and/or sun
+                this_play_date_start = None
+                this_play_date_end = None
+                if "sat" in show_time:
+                    # set this_play_date_start to saturday (weekday=5) after
+                    #   play_date_start
+                    this_play_date_start = play_date_start + datetime.timedelta(
+                        days=5 - weekday_start
+                    )
+                if "sun" in show_time:
+                    # set this_play_date_end to sunday (weekday=6) after
+                    #   play_date_start
+                    this_play_date_end = play_date_start + datetime.timedelta(
+                        days=6 - weekday_start
+                    )
+                if not this_play_date_start:
+                    this_play_date_start = this_play_date_end
+                if not this_play_date_end:
+                    this_play_date_end = this_play_date_start
+
+                this_time = show_time.split(" ")[0]
+
+            # process times, dates
+            (hour, minute) = this_time.split(":")
+            # assume all times are PM, so add 12 to time
+            hour = int(hour) + 12
+            minute = int(minute)
+
+            # DON'T USE tzinfo!  USE pytz.timezone.localize()
+            #   for some reason using tzinfo with datetime.combine
+            #   gives a strange timezone (-07:53)
+            datetime_start = datetime.datetime.combine(
+                this_play_date_start, datetime.time(hour, minute, 0)
+            )
+            # put extracted time in THEATER timezone
+            datetime_start = THEATER_TZ.localize(datetime_start)
+            # Convert to UTC timezone
+            datetime_start = datetime_start.astimezone(pytz.utc)
+
+            datetime_end = datetime_start + datetime.timedelta(minutes=runtime)
+            # rrule_count is how many days including this one
+            rrule_count = (this_play_date_end - this_play_date_start).days + 1
+
+            play_date["showings"].append(
+                {
+                    "datetime_start": datetime_start,
+                    "datetime_end": datetime_end,
+                    "rrule_count": rrule_count,
+                }
+            )
