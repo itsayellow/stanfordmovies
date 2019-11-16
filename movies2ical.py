@@ -10,6 +10,7 @@ import argparse
 import datetime
 import json
 from pathlib import Path
+import textwrap
 import urllib.request
 import urllib.error
 import urllib.parse
@@ -1018,40 +1019,42 @@ def setup_app_directories():
     CONFIG_DIR.mkdir(exist_ok=True, parents=True)
 
     config_toml_example_path = CONFIG_DIR / "config.toml.example"
-    config_toml_example_str = """
-    # Information for movies2ical
+    config_toml_example_str = textwrap.dedent(
+        """
+        # Information for movies2ical
 
-    [notify17]
-        new_calendar_url = "https://hook.notify17.net/api/template/<your-template-specifier>"
-        error_url = "https://hook.notify17.net/api/template/<your-template-specifier>"
+        [notify17]
+            new_calendar_url = "https://hook.notify17.net/api/template/<your-template-specifier>"
+            error_url = "https://hook.notify17.net/api/template/<your-template-specifier>"
 
-    [plist]
-        ProgramArguments = [
-            "/path/to/python3",
-            "/path/to/movies2ical.py",
-            "--correct_times",
-            "--notify"
-        ]
-        WorkingDirectory = "/directory/to/output/calendars/"
-        StandardOutPath = "/path/to/stanford_out.txt"
-        StandardErrorPath = "/path/to/stanford_err.txt"
-        # new [[plist.StartCalendarInterval]] for each new date/time to run command
-        [[plist.StartCalendarInterval]]
-        # Sunday 3:00am
-        Hour = 3
-        Minute = 0
-        Weekday = 0
-        [[plist.StartCalendarInterval]]
-        # Tuesday 3:00am
-        Hour = 3
-        Minute = 0
-        Weekday = 2
-        [[plist.StartCalendarInterval]]
-        # Thursday 3:00am
-        Hour = 3
-        Minute = 0
-        Weekday = 4
-    """
+        [plist]
+            ProgramArguments = [
+                "/path/to/python3",
+                "/path/to/movies2ical.py",
+                "--correct_times",
+                "--notify"
+            ]
+            WorkingDirectory = "/directory/to/output/calendars/"
+            StandardOutPath = "/path/to/stanford_out.txt"
+            StandardErrorPath = "/path/to/stanford_err.txt"
+            # new [[plist.StartCalendarInterval]] for each new date/time to run command
+            [[plist.StartCalendarInterval]]
+            # Sunday 3:00am
+            Hour = 3
+            Minute = 0
+            Weekday = 0
+            [[plist.StartCalendarInterval]]
+            # Tuesday 3:00am
+            Hour = 3
+            Minute = 0
+            Weekday = 2
+            [[plist.StartCalendarInterval]]
+            # Thursday 3:00am
+            Hour = 3
+            Minute = 0
+            Weekday = 4
+        """
+    ).strip()
     with config_toml_example_path.open("w") as config_toml_example_fh:
         config_toml_example_fh.write(config_toml_example_str)
 
