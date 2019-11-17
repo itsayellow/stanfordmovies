@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # TODO: incorporate shorts without their own times into main feature
 #       description
 # TODO: properly handle unicode in imdb data
