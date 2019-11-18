@@ -47,3 +47,10 @@ To remove from launchd system
 .. code:: bash
 
     launchctl unload ~/Library/LaunchAgents/local.CheckStanfordMovieSchedule.plist
+
+To view configuration in launchd system
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code:: bash
+
+    launchctl list local.CheckStanfordMovieSchedule
