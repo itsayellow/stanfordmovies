@@ -6,9 +6,13 @@ Utility to read current HTML calendar from stanfordtheatre.org and output ical f
 Installation
 ------------
 
-::
+Install `pipx <https://github.com/pipxproject/pipx>`_::
 
-    pipx install --spec git+https://github.com/itsayellow/stanfordmovies movies2ical
+    pip install pipx
+    
+Install stanfordmovies (movies2ical)::
+
+    pipx install git+https://github.com/itsayellow/stanfordmovies
 
 Periodically running in the background on macOS
 -----------------------------------------------
