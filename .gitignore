@@ -1,5 +1,5 @@
 *.ics
 imdb_cache/
 stanford_movie_cache/
-virt/
+/venv*/
 *.egg-info
