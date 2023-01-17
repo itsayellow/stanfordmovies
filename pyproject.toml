@@ -1,6 +1,54 @@
 [build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "movies2ical"
+dynamic = ["version"]
+description = "Generate ical files from Stanford Movie Theater calendar webpage."
+readme = "README.rst"
+license = ""
+requires-python = ">=3.6"
+authors = [
+    { name = "Matthew A. Clapp", email = "itsayellow+dev@gmail.com" },
+]
+keywords = [
+    "ical",
+    "movies",
+]
+classifiers = [
+    "Natural Language :: English",
+]
+dependencies = [
+    "beautifulsoup4",
+    "bleach",
+    "html5lib",
+    "icalendar",
+    "imdbpy>=6.5",
+    "pytz",
+    "requests",
+    "toml",
+    "tzlocal",
+]
+
+[project.scripts]
+movies2ical = "movies2ical.main:cli"
+
+[project.urls]
+Homepage = "https://github.com/itsayellow/stanfordmovies"
+
+[tool.hatch.version]
+path = "src/movies2ical/__about__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "src/movies2ical",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/ src",
+]
 
 [tool.isort]
 profile = "black"
