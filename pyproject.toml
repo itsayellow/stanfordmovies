@@ -42,12 +42,12 @@ path = "src/movies2ical/__about__.py"
 
 [tool.hatch.build.targets.wheel]
 packages = [
-    "src/movies2ical",
+    "/src/movies2ical",
 ]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "/ src",
+    "/src/movies2ical",
 ]
 
 [tool.isort]
